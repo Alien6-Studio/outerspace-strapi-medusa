@@ -34,7 +34,7 @@
         }
       }
     },
-    "displayame": {
+    "displayName": {
       "type": "string",
       "pluginOptions": {
         "i18n": {

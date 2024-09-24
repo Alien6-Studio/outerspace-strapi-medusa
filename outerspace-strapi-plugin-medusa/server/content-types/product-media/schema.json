@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "productmedias",
+  "collectionName": "product_medias",
   "info": {
-    "singularName": "productmedia",
-    "pluralName": "productmedias",
+    "singularName": "product-media",
+    "pluralName": "product-medias",
     "displayName": "Product Media",
     "description": "To store product related multimedia files"
   },

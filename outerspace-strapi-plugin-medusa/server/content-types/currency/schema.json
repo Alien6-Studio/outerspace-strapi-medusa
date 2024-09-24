@@ -19,9 +19,6 @@
     }
   },
   "attributes": {
-    "medusa_id": {
-      "type": "uid"
-    },
     "code": {
       "type": "uid",
       "required": true,

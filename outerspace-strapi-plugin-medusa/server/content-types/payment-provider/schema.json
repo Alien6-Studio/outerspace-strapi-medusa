@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "paymentproviders",
+  "collectionName": "payment_providers",
   "info": {
-    "singularName": "paymentprovider",
-    "pluralName": "paymentproviders",
+    "singularName": "payment-provider",
+    "pluralName": "payment-providers",
     "displayName": "Payment Provider",
     "description": ""
   },

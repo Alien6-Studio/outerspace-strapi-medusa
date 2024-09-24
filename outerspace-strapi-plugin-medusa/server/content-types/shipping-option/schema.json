@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "shippingoptions",
+  "collectionName": "shipping_options",
   "info": {
-    "singularName": "shippingoption",
-    "pluralName": "shippingoptions",
+    "singularName": "shipping-option",
+    "pluralName": "shipping-options",
     "displayName": "Shipping Option",
     "description": ""
   },
@@ -105,7 +105,7 @@
     "shipping_option_requirements": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.shippingoptionrequirement",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option-requirement",
       "inversedBy": "shipping_options",
       "pluginOptions": {
         "translate": {
@@ -116,7 +116,7 @@
     "shipping_profiles": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.shippingprofile",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-profile",
       "inversedBy": "shipping_options",
       "pluginOptions": {
         "translate": {
@@ -127,7 +127,7 @@
     "fulfillment_providers": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.fulfillmentprovider",
+      "target": "plugin::outerspace-strapi-plugin-medusa.fulfillment-provider",
       "pluginOptions": {
         "translate": {
           "translate": "translate"

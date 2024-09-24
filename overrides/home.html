@@ -1,0 +1,78 @@
+{% extends "main.html" %} {% block tabs %} {{ super() }}
+<style>
+  .md-main {
+    height: 0;
+  }
+
+  .md-header {
+    position: initial;
+  }
+
+  .md-main__inner {
+    margin: 0;
+  }
+
+  .md-content {
+    display: none;
+  }
+
+  .md-typeset h1 {
+    text-align: center;
+    margin: 0;
+  }
+
+  @media screen and (min-width: 60em) {
+    .md-sidebar--secondary {
+      display: none;
+    }
+  }
+
+  @media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+      display: none;
+    }
+  }
+</style>
+
+<section
+  class="fluid-box"
+  data-md-color-scheme="slate"
+  data-md-color-primary="indigo"
+>
+  <img
+    src="assets/images/illustration.png"
+    alt="Illustration of OuterSpace Strapi-Meduda Plugin"
+    width="100%"
+    height="auto"
+    draggable="false"
+  />
+  <div class="md-grid">
+    <div class="md-content__inner">
+      <header class="md-typeset">
+        <h1 id="open-source">
+          Connect. Elevate. Thrive.
+        </h1>
+      </header>
+    </div>
+  </div>
+</section>
+
+<section class="md-container">
+  <div class="md-grid md-typeset">
+    <div class="mdx-intro">
+      <h3>Jump into a seamless e-commerce journey with Medusa and Strapi!</h3>
+      <p>
+        Our plugins unite the best of both worlds: Medusa’s robust e-commerce 
+        management and Strapi’s powerful content capabilities. Synchronize data, 
+        enhance your product content, and grow your platform effortlessly.
+      </p>
+      <p>
+        <b>Unlock powerful possibilities</b> with automatic synchronization, 
+        media management, and multilingual content all in one integrated 
+        solution.
+      </p>
+    </div>
+  </div>
+</section>
+
+{% endblock %} {% block footer %} {{ super() }} {% endblock %}

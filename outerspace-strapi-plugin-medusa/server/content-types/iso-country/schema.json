@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "isocountries",
+  "collectionName": "iso_countries",
   "info": {
-    "singularName": "isocountry",
-    "pluralName": "isocountries",
+    "singularName": "iso-country",
+    "pluralName": "iso-countries",
     "displayName": "Country",
     "description": ""
   },

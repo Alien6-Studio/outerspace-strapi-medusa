@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "productdocuments",
+  "collectionName": "product_documents",
   "info": {
-    "singularName": "productdocument",
-    "pluralName": "productdocuments",
+    "singularName": "product-document",
+    "pluralName": "product-documents",
     "displayName": "Product Document",
     "description": "Used to store product related Document files"
   },

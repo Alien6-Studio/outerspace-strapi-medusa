@@ -1,12 +1,17 @@
 import { Router } from 'express';
-import hooksRouter from './hooks';
-import contentRouter from './content';
 import { ConfigModule } from '@medusajs/medusa/dist/types/global';
-import adminRouter from './strapi-admin';
 import { getConfigFile } from 'medusa-core-utils';
 
+// Custom imports
+import adminRouter from './strapi-admin';
+import hooksRouter from './hooks';
+import contentRouter from './content';
+
+/**
+ * Initializes the Medusa Strapi plugin routes
+ */
 export default (app, options, config: ConfigModule) => {
-	//  app.use("/strapi", strapiRouter);
+
 	// Authenticated routes
 	if (!config) {
 		/** to support standard @medusajs/medusa */
