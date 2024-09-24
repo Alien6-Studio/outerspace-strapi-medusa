@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "productlegals",
+  "collectionName": "product_legals",
   "info": {
-    "singularName": "productlegal",
-    "pluralName": "productlegals",
+    "singularName": "product-legal",
+    "pluralName": "product-legals",
     "displayName": "Product Legal",
     "description": "Legal Pages to Attached to the Product"
   },

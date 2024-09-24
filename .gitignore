@@ -4,7 +4,7 @@
 # Node.js
 **/node_modules/*
 **/dist/*
-
+**/public/*
 
 ### Visual Studio Code ###
 docker-compose-dev.yml

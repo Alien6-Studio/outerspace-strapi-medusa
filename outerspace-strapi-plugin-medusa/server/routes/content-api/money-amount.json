@@ -1,0 +1,44 @@
+{
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/money-amounts",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.money-amount.find",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/money-amounts/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.money-amount.findOne",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/money-amounts",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.money-amount.create",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/money-amounts/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.money-amount.update",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/money-amounts/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.money-amount.delete",
+      "config": {
+        "policies": []
+      }
+    }
+  ]
+}

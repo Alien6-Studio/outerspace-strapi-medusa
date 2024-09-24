@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/product-tags",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-tag.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/product-tags/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-tag.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/product-tags",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-tag.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/product-tags/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-tag.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/product-tags/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-tag.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "productoptions",
+  "collectionName": "product_options",
   "info": {
-    "singularName": "productoption",
-    "pluralName": "productoptions",
+    "singularName": "product-option",
+    "pluralName": "product-options",
     "displayName": "Product Option",
     "description": ""
   },
@@ -41,7 +41,7 @@
     "product_option_values": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productoptionvalue",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-option-value",
       "inversedBy": "product_option"
     }
   }

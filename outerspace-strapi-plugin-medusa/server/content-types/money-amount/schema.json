@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "moneyamounts",
+  "collectionName": "money_amounts",
   "info": {
-    "singularName": "moneyamount",
-    "pluralName": "moneyamounts",
+    "singularName": "money-amount",
+    "pluralName": "money-amounts",
     "displayName": "Money Amount",
     "description": ""
   },
@@ -41,7 +41,7 @@
     "product_variants": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productvariant",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-variant",
       "mappedBy": "money_amount"
     }
   }

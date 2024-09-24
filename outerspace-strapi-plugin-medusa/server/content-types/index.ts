@@ -1,51 +1,51 @@
 "use strict";
 
-import isocountry from "./iso-country";
+import isoCountry from "./iso-country";
 import currency from "./currency";
-import fulfillmentprovider from "./fulfillment-provider";
+import fulfillmentProvider from "./fulfillment-provider";
 import image from "./image";
-import moneyamount from "./money-amount";
-import paymentprovider from "./payment-provider";
+import moneyAmount from "./money-amount";
+import paymentProvider from "./payment-provider";
 import product from "./product";
-import productcategory from "./product-category";
-import productcollection from "./product-collection";
-import productdocument from "./product-document";
-import productlegal from "./product-legal";
-import productmedia from "./product-media";
-import productmetafield from "./product-metafield";
-import productoption from "./product-option";
-import productoptionvalue from "./product-option-value";
-import producttag from "./product-tag";
-import producttype from "./product-type";
-import productvariant from "./product-variant";
+import productCategory from "./product-category";
+import productCollection from "./product-collection";
+import productDocument from "./product-document";
+import productLegal from "./product-legal";
+import productMedia from "./product-media";
+import productMetafield from "./product-metafield";
+import productOption from "./product-option";
+import productOptionValue from "./product-option-value";
+import productTag from "./product-tag";
+import productType from "./product-type";
+import productVariant from "./product-variant";
 import region from "./region";
-import shippingoption from "./shipping-option";
-import shippingoptionrequirement from "./shipping-option-requirement";
-import shippingprofile from "./shipping-profile";
+import shippingOption from "./shipping-option";
+import shippingOptionRequirement from "./shipping-option-requirement";
+import shippingProfile from "./shipping-profile";
 import store from "./store";
 
 export default {
-    isocountry,
-    currency,
-    fulfillmentprovider,
-    image,
-    moneyamount,
-    paymentprovider,
-    product,
-    productcategory,
-    productcollection,
-    productdocument,
-    productlegal,
-    productmedia,
-    productmetafield,
-    productoption,
-    productoptionvalue,
-    producttag,
-    producttype,
-    productvariant,
-    region,
-    shippingoption,
-    shippingoptionrequirement,
-    shippingprofile,
-    store,
+    'iso-country': isoCountry,
+    'currency': currency,
+    'fulfillment-provider': fulfillmentProvider,
+    'image': image,
+    'money-amount': moneyAmount,
+    'payment-provider': paymentProvider,
+    'product': product,
+    'product-category': productCategory,
+    'product-collection': productCollection,
+    'product-document': productDocument,
+    'product-legal': productLegal,
+    'product-media': productMedia,
+    'product-metafield': productMetafield,
+    'product-option': productOption,
+    'product-option-value': productOptionValue,
+    'product-tag': productTag,
+    'product-type': productType,
+    'product-variant': productVariant,
+    'region': region,
+    'shipping-option': shippingOption,
+    'shipping-option-requirement': shippingOptionRequirement,
+    'shipping-profile': shippingProfile,
+    'store': store,
 };

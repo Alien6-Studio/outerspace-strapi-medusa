@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "shippingoptionrequirements",
+  "collectionName": "shipping_option_requirements",
   "info": {
-    "singularName": "shippingoptionrequirement",
-    "pluralName": "shippingoptionrequirements",
+    "singularName": "shipping-option-requirement",
+    "pluralName": "shipping-option-requirements",
     "displayName": "Shipping Option Requirement",
     "description": ""
   },
@@ -45,7 +45,7 @@
     "shipping_options": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.shippingoption",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option",
       "pluginOptions": {
         "translate": {
           "translate": "translate"

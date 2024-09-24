@@ -9,7 +9,7 @@ export default ({ strapi }: { strapi: Strapi }) => ({
 		console.log('attempting to create medusa user');
 		ctx.body = await strapi
             .plugin('outerspace-strapi-plugin-medusa')
-			.service('setup')
+			.service('setupService')
 			.verifyOrCreateMedusaUser(ctx.request.body);
 		return ctx.body;
 	},
@@ -22,7 +22,7 @@ export default ({ strapi }: { strapi: Strapi }) => ({
         console.log('attempting to synchronise with medusa');
 		ctx.body = await strapi
             .plugin('outerspace-strapi-plugin-medusa')
-            .service('setup')
+            .service('setupService')
             .synchroniseWithMedusa({ strapi });
 		return ctx.body;
 	},

@@ -65,7 +65,7 @@
     "countries": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.isocountry",
+      "target": "plugin::outerspace-strapi-plugin-medusa.iso-country",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -76,7 +76,7 @@
     "fulfillment_providers": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.fulfillmentprovider",
+      "target": "plugin::outerspace-strapi-plugin-medusa.fulfillment-provider",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -87,7 +87,7 @@
     "payment_provider": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::outerspace-strapi-plugin-medusa.paymentprovider",
+      "target": "plugin::outerspace-strapi-plugin-medusa.payment-provider",
       "inversedBy": "regions",
       "pluginOptions": {
         "translate": {
@@ -109,7 +109,7 @@
     "shipping_options": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.shippingoption",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option",
       "pluginOptions": {
         "translate": {
           "translate": "translate"

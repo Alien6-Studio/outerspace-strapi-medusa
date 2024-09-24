@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "fulfillmentproviders",
+  "collectionName": "fulfillment_providers",
   "info": {
-    "singularName": "fulfillmentprovider",
-    "pluralName": "fulfillmentproviders",
+    "singularName": "fulfillment-provider",
+    "pluralName": "fulfillment-providers",
     "displayName": "Fulfillment Provider",
     "description": ""
   },
@@ -20,7 +20,9 @@
   },
   "attributes": {
     "medusa_id": {
-      "type": "uid"
+      "type": "string",
+      "required": true,
+      "unique": true
     },
     "is_installed": {
       "type": "boolean",
@@ -46,7 +48,7 @@
     "shipping_options": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.shippingoption",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option",
       "mappedBy": "fulfillment_providers",
       "pluginOptions": {
         "translate": {

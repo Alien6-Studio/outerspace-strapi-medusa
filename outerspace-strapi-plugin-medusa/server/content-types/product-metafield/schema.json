@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "productmetafields",
+  "collectionName": "product_metafields",
   "info": {
-    "singularName": "productmetafield",
-    "pluralName": "productmetafields",
+    "singularName": "product-metafield",
+    "pluralName": "product-metafields",
     "displayName": "Product Metafield",
     "description": ""
   },
