@@ -221,7 +221,7 @@
     "product_categories": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productcategory",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-category",
       "mappedBy": "products",
       "pluginOptions": {
         "translate": {
@@ -232,7 +232,7 @@
     "product_collection": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productcollection",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-collection",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -243,7 +243,7 @@
     "product_documents": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productdocument",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-document",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -254,7 +254,7 @@
     "product_legal": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productlegal",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-legal",
       "inversedBy": "products",
       "pluginOptions": {
         "translate": {
@@ -265,7 +265,7 @@
     "product_medias": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productmedia",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-media",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -276,7 +276,7 @@
     "product_metafield": {
       "type": "relation",
       "relation": "oneToOne",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productmetafield",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-metafield",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -287,7 +287,7 @@
     "product_options": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productoption",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-option",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -298,7 +298,7 @@
     "product_tags": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.producttag",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-tag",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -309,7 +309,7 @@
     "product_type": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::outerspace-strapi-plugin-medusa.producttype",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-type",
       "pluginOptions": {
         "translate": {
           "translate": "translate"
@@ -331,7 +331,7 @@
     "product_variants": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productvariant",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-variant",
       "pluginOptions": {
         "translate": {
           "translate": "translate"

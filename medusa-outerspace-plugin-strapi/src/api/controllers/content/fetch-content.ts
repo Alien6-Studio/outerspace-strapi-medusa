@@ -10,7 +10,7 @@ export default async (req: Request, res: Response) => {
 		password: process.env.STRAPI_MEDUSA_PASSWORD,
 	};
 	if (!authInterface.email) {
-		authInterface = updateStrapiService.defaultAuthInterface;
+		authInterface = updateStrapiService.getAuthInterface();
 	}
 
 	const strapiEntityType = req.params.type;

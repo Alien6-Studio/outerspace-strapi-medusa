@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "shippingprofiles",
+  "collectionName": "shipping_profiles",
   "info": {
-    "singularName": "shippingprofile",
-    "pluralName": "shippingprofiles",
+    "singularName": "shipping-profile",
+    "pluralName": "shipping-profiles",
     "displayName": "Shipping Profile",
     "description": ""
   },
@@ -59,7 +59,7 @@
     "shipping_options": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::outerspace-strapi-plugin-medusa.shippingoption",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option",
       "pluginOptions": {
         "translate": {
           "translate": "translate"

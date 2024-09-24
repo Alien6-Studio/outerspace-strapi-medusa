@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "producttags",
+  "collectionName": "product_tags",
   "info": {
-    "singularName": "producttag",
-    "pluralName": "producttags",
+    "singularName": "product-tag",
+    "pluralName": "product-tags",
     "displayName": "Product Tag",
     "description": ""
   },

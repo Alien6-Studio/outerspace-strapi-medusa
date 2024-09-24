@@ -1,10 +1,11 @@
 import { EventBusService } from '@medusajs/medusa';
 import { ConfigModule, Logger } from '@medusajs/medusa/dist/types/global';
 import { NextFunction, Request, Response } from 'express';
+import { EntityManager } from 'typeorm';
+
 import seedHandler from './seed';
 import updateHandler from './update-medusa';
 import * as jwt from 'jsonwebtoken';
-import { EntityManager } from 'typeorm';
 
 export interface StrapiSignalInterface {
 	message: string;

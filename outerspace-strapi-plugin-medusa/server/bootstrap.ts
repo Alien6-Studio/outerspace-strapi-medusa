@@ -1,5 +1,5 @@
 import { Strapi } from '@strapi/strapi';
-import pluginId from './helpers/pluginId';
+import { config }  from './services/setup-service';
 
 const chalk = require('chalk');
 
@@ -59,5 +59,48 @@ export default async ({ strapi }: { strapi: Strapi }) => {
 		}
   }
 
+  /**
+   * Update the public permissions
+   */
+  async function setPublicPermissions(newPermissions: Record<string, string[]>) {
+
+	const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
+		where: {
+			type: 'public',
+		},
+	});
+
+	const allPermissionsToCreate: Promise<any>[] = [];
+	Object.keys(newPermissions).map((controller) => {
+		const actions = newPermissions[controller];
+		const permissionsToCreate = actions.map((action) => {
+			// eslint-disable-next-line no-undef
+			return strapi.query('plugin::users-permissions.permission').create({
+				data: {
+					action: `plugin::outerspace-strapi-plugin-medusa.${controller}.${action}`,
+					role: publicRole.id,
+				},
+			});
+		});
+		allPermissionsToCreate.push(...permissionsToCreate);
+	});
+	await Promise.all(allPermissionsToCreate);
+  }
+
+  // Register the plugin
+  config(strapi);
+
   await createSuperAdmin();
+
+  // Set public permissions
+  await setPublicPermissions({
+	'product': ['find', 'findOne'],
+	'product-type': ['find', 'findOne'],
+	'product-tag': ['find', 'findOne'],
+	'product-category': ['find', 'findOne'],
+	'product-collection': ['find', 'findOne'],
+	'product-variant': ['find', 'findOne'],
+	'store': ['find', 'findOne'],
+});
+  
 };

@@ -1,13 +1,16 @@
-import { MedusaError } from '@medusajs/utils';
 import {MedusaRequest , MedusaResponse} from "@medusajs/medusa"
 import UpdateStrapiService from '../../../services/update-strapi';
 
+/**
+ * Sync Medusa with Strapi
+ * 
+ */
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 	const updateStrapiService = req.scope.resolve('UpdateStrapiService') as UpdateStrapiService;
 
 	if (updateStrapiService.strapiSuperAdminAuthToken) {
 		try {
-			await updateStrapiService.executeSync(updateStrapiService.strapiSuperAdminAuthToken);
+			await updateStrapiService.strapiHelper.getServer().executeSync(updateStrapiService.strapiSuperAdminAuthToken);
 		} catch (e) {
 			res.sendStatus(500);
 			return;
