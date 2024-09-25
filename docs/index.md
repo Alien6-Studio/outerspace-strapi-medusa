@@ -1,6 +1,6 @@
 ---
 template: home.html
-title: OuterSpace Apizr
+title: OuterSpace Strapi-Meduda Plugin
 description:
 og_image: images/illustration.png
 ---
