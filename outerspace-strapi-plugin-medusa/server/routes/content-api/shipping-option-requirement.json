@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/shipping-option-requirements",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-option-requirement.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/shipping-option-requirements/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-option-requirement.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/shipping-option-requirements",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-option-requirement.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/shipping-option-requirements/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-option-requirement.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/shipping-option-requirements/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-option-requirement.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

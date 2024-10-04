@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/product-option-values",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-option-value.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/product-option-values/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-option-value.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/product-option-values",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-option-value.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/product-option-values/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-option-value.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/product-option-values/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-option-value.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

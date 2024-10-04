@@ -1,9 +1,9 @@
 {
   "kind": "collectionType",
-  "collectionName": "productvariants",
+  "collectionName": "product_variants",
   "info": {
-    "singularName": "productvariant",
-    "pluralName": "productvariants",
+    "singularName": "product-variant",
+    "pluralName": "product-variants",
     "displayName": "Product Variant",
     "description": ""
   },
@@ -183,7 +183,7 @@
     "money_amount": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::outerspace-strapi-plugin-medusa.moneyamount",
+      "target": "plugin::outerspace-strapi-plugin-medusa.money-amount",
       "inversedBy": "product_variants",
       "pluginOptions": {
         "translate": {
@@ -194,7 +194,7 @@
     "product_option_value": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::outerspace-strapi-plugin-medusa.productoptionvalue",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-option-value",
       "inversedBy": "product_variants",
       "pluginOptions": {
         "translate": {

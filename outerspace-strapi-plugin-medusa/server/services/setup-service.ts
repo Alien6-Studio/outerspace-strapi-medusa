@@ -1,7 +1,11 @@
+"use strict";
+
 import { Strapi } from '@strapi/strapi';
 import { default as axios } from 'axios';
 import _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
+
+import { determineUniqueField, createNestedEntity } from './utils';
 
 let strapi: any;
 
@@ -79,7 +83,7 @@ export async function createMedusaRole(permissions: any): Promise<number | undef
 /**
  * Check if Medusa user exists
  */
-export async function hasMedusaUser(strapi: Strapi): Promise<number | boolean> {
+export async function hasMedusaUser(): Promise<number | boolean> {
 	strapi.log.debug('Checking if "medusa_user" exists');
 	const user = await strapi.query('plugin::users-permissions.user').findOne({
 		where: { username: 'medusa_user' },
@@ -100,8 +104,6 @@ export async function deleteAllEntries(): Promise<void> {
 	const plugins = await strapi.plugins['users-permissions'].services['users-permissions'].initialize();
 
 	const permissions = await strapi.plugins['users-permissions'].services['users-permissions'].getActions(plugins);
-
-	//  const controllers = permissions[permission].controllers
 	// flush only apis
 	const apisToFlush = Object.keys(permissions).filter((value) => {
 		return value.startsWith('api::') != false;
@@ -125,6 +127,10 @@ export async function deleteAllEntries(): Promise<void> {
  * Create Medusa user
  */
 export async function verifyOrCreateMedusaUser(medusaUser: MedusaUserParams): Promise<any> {
+	if (!strapi){
+		strapi.log.error('strapi object not initialized');
+		throw new Error('strapi object not initialized');
+	}
 	const users = await strapi.plugins['users-permissions'].services.user.fetchAll({
 		filters: {
 			email: medusaUser.email /** email address is unique */,
@@ -334,29 +340,6 @@ async function sendSignalToMedusa(
 		// Sign the message
 		const signedMessage = jwt.sign(messageData, process.env.MEDUSA_STRAPI_SECRET || 'no-secret');
 
-		// Test mode
-		if (process.env.NODE_ENV=="test" && message == "SEED"){
-			const t:StrapiSeedInterface={
-				meta: {
-					pageNumber: 1,
-					pageLimit: 0,
-					hasMore: {products:false}
-				},
-				data: {products:[]}
-			}
-			return {
-				status:200,
-				data: t,
-			}
-		}
-		// Test mode w/o seed
-		if (process.env.NODE_ENV == "test"){
-			return {
-				status:200,
-				data: {}
-			}
-		}
-
 		// Send the message
 		const result = await axios.post(strapiSignalHook, {
 			signedMessage: signedMessage,
@@ -378,10 +361,56 @@ async function sendSignalToMedusa(
 }
 
 /**
+ * Bootrap Services
+ * 
+ * The service data is received from Medusa and is used to create or update entities in strapi
+ * It is called with an array of services and their corresponding data as per defined in the 
+ * synchroniseWithMedusa function:
+ * 
+ */
+async function bootstrap(servicesToSync: Record<string, any[]>, pageNumber: number) {
+    const strapiApiServicesNames = Object.keys(servicesToSync);
+    const strapiApiServicedDataReceivedFromMedusa = Object.values(servicesToSync);
+
+    for (let i = 0; i < strapiApiServicesNames.length; i++) {
+		// ServiceName is the key in the servicesToSync object
+        const serviceName = strapiApiServicesNames[i];
+        const serviceData = strapiApiServicedDataReceivedFromMedusa[i];
+
+        if (Array.isArray(serviceData) && serviceData.length > 0) {
+            try {
+                for (const entity of serviceData) {
+					// Add locale and publishedAt to the entity
+                    const entityWithLocale = {
+                        ...entity,
+                        locale: 'en',
+                        publishedAt: new Date(),
+                    };
+
+					await createNestedEntity(serviceName, strapi, entityWithLocale);
+                }
+            } catch (e) {
+                strapi.log.error(`Error syncing ${serviceName}:`, JSON.stringify(e));
+            }
+        } 
+    }
+}
+
+/**
  * Synchronise Medusa
  */
+let isSyncing = false;
 
 async function synchroniseWithMedusa(): Promise<boolean | undefined> {
+
+	// If the sync is already in progress, exit the function immediately
+    if (isSyncing) {
+        strapi.log.info("Sync process already running. Exiting.");
+        return;
+    }
+
+	// Mark the sync as in progress
+    isSyncing = true;
 
 	const medusaServer = `${process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000'}`;
 	const medusaSeedHookUrl = `${medusaServer}/strapi/hooks/seed`;
@@ -400,13 +429,14 @@ async function synchroniseWithMedusa(): Promise<boolean | undefined> {
 
 	} catch (e) {
 		strapi.log.info(
-			'Unable to Fetch Seed Data from Medusa server.Please check configuartion' + `${JSON.stringify(e)}`
+			'Unable to Fetch Seed Data from Medusa server.Please check configuration' + `${JSON.stringify(e)}`
 		);
+		isSyncing = false;  // Reset syncing flag
 		return false;
 	}
 
-	// IMPORTANT: Order of seed must be maintained. Please don't change the order
 	if (!seedData) {
+		isSyncing = false;  // Reset syncing flag
 		return false;
 	}
 
@@ -414,16 +444,17 @@ async function synchroniseWithMedusa(): Promise<boolean | undefined> {
 
 	do {
 		continueSeed = false;
-		const products = seedData?.data?.products;
+		const fulfillmentProviders = seedData?.data?.fulfillmentProviders;
+		const paymentProviders = seedData?.data?.paymentProviders;
 		const regions = seedData?.data?.regions;
 		const shippingOptions = seedData?.data?.shippingOptions;
-		const paymentProviders = seedData?.data?.paymentProviders;
-		const fulfillmentProviders = seedData?.data?.fulfillmentProviders;
 		const shippingProfiles = seedData?.data?.shippingProfiles;
 		const productCollections = seedData?.data?.productCollections;
+		const products = seedData?.data?.products;
 		const stores = seedData?.data?.stores;
 
 		try {
+			// IMPORTANT: Order of seed must be maintained. Please don't change the order
 			const servicesToSync = {
 				'plugin::outerspace-strapi-plugin-medusa.fulfillment-provider': fulfillmentProviders,
 				'plugin::outerspace-strapi-plugin-medusa.payment-provider': paymentProviders,
@@ -431,34 +462,14 @@ async function synchroniseWithMedusa(): Promise<boolean | undefined> {
 				'plugin::outerspace-strapi-plugin-medusa.shipping-option': shippingOptions,
 				'plugin::outerspace-strapi-plugin-medusa.shipping-profile': shippingProfiles,
 				'plugin::outerspace-strapi-plugin-medusa.product-collection': productCollections,
-				'plugin::outerspace-strapi-plugin-medusa.roduct': products,
+				'plugin::outerspace-strapi-plugin-medusa.product': products,
 				'plugin::outerspace-strapi-plugin-medusa.store': stores,
 			};
-
-			const strapiApiServicedDataRecievedFromMedusa = Object.values(servicesToSync);
-			const strapiApiServicesNames = Object.keys(servicesToSync);
-
-			for (let i = 0; i < strapiApiServicesNames.length; i++) {
-				if (
-					strapiApiServicedDataRecievedFromMedusa[i] &&
-					strapiApiServicedDataRecievedFromMedusa[i]?.length > 0
-				) {
-					try {
-						await strapi.services[strapiApiServicesNames[i]].bootstrap(
-							strapiApiServicedDataRecievedFromMedusa[i]
-						);
-					} catch (e) {
-						strapi.log.info('unable to bootstrapi', JSON.stringify(e));
-					}
-				} else {
-					strapi.log.info(
-						`Nothing to sync ${strapiApiServicesNames[i]}  no data` + ` received in page ${pageNumber}`
-					);
-				}
-			}
+			await bootstrap(servicesToSync, pageNumber);
 
 		} catch (e) {
 			strapi.log.info('Unable to Sync with to Medusa server. Please check data recieved', JSON.stringify(e));
+			isSyncing = false;  // Reset syncing flag
 			return false;
 		}
 
@@ -482,6 +493,7 @@ async function synchroniseWithMedusa(): Promise<boolean | undefined> {
 							'Unable to Sync with to Medusa server. Please check data recieved',
 							JSON.stringify(e)
 						);
+						isSyncing = false;  // Reset syncing flag
 						return false;
 					}
 					break;
@@ -489,6 +501,9 @@ async function synchroniseWithMedusa(): Promise<boolean | undefined> {
 			}
 		}
 	} while (continueSeed);
+
+	// Reset syncing flag after sync completion
+	isSyncing = false;
 
 	strapi.log.info('SYNC FINISHED');
 	const result = (await sendSignalToMedusa('SYNC COMPLETED'))?.status == 200;
@@ -498,7 +513,7 @@ async function synchroniseWithMedusa(): Promise<boolean | undefined> {
 /**
  * Return the service object
  */
-export default ({strapi}: {strapi: Strapi}) => ({
-	createMedusaUser,
+export default () => ({
+	verifyOrCreateMedusaUser,
 	synchroniseWithMedusa
 });
