@@ -1,11 +1,10 @@
 'use strict';
 
 import { Logger } from '@medusajs/medusa/dist/types/global';
-import qs from 'qs';
 import { EntityManager } from 'typeorm';
-
 import cloneDeep from 'lodash/cloneDeep';
 import isEmpty from 'lodash/isEmpty';
+import qs from 'qs';
 
 import {
 	BaseEntity,
@@ -17,26 +16,23 @@ import {
 	ProductVariantService,
 	RegionService,
 	TransactionBaseService,
-	ProductCategoryService,
-	ProductVariant,
+	ProductCategoryService
 } from '@medusajs/medusa';
 
 // Custom imports
 import { LoggerHelper } from './helpers/loggerHelper';
 import { StrapiHelper }	from './helpers/strapiHelper';
 import { RedisHelper } from './helpers/redisHelper';
-import { StrapiServerManager } from './helpers/strapiServerManager';
 
 import { StrapiResult, StrapiGetResult } from './types/types';
 
 import {
 	StrapiMedusaPluginOptions,
-	StrapiSendParams,
 	AuthInterface,
-	CreateInStrapiParams,
-	GetFromStrapiParams
+	GetFromStrapiParams,
+	StrapiSendParams,
 } from '../types/globals';
-
+import { log } from 'console';
 
 /**
  * Parameters for the UpdateStrapiService
@@ -45,12 +41,12 @@ export interface UpdateStrapiServiceParams {
 	manager: EntityManager;
 	regionService: RegionService;
 	productService: ProductService;
-	redisClient: any;
 	productVariantService: ProductVariantService;
 	productTypeService: ProductTypeService;
-	eventBusService: EventBusService;
 	productCollectionService: ProductCollectionService;
 	productCategoryService: ProductCategoryService;
+	redisClient: any;
+	eventBusService: EventBusService;
 	logger: Logger;
 }
 
@@ -60,12 +56,9 @@ export interface UpdateStrapiServiceParams {
 export class UpdateStrapiService extends TransactionBaseService {
 
 	// Technical fields
-	strapi_protocol: string;
-	strapi_url: string;
-	strapi_port: number;
 	strapiSuperAdminAuthToken: string;
-	options_: StrapiMedusaPluginOptions;
 	key: WithImplicitCoercion<ArrayBuffer | SharedArrayBuffer>;
+	options: StrapiMedusaPluginOptions;
 
 	// Managers
 	protected manager_: EntityManager;
@@ -101,40 +94,16 @@ export class UpdateStrapiService extends TransactionBaseService {
 		this.productCollectionService = container.productCollectionService;
 		this.productCategoryService = container.productCategoryService;
 
-		// Set the technical fields
-		this.options_ = options;
-		this.strapi_protocol = this.options_.strapi_protocol ?? 'https';
-		this.strapi_port = this.options_.strapi_port ?? (this.strapi_protocol == 'https' ? undefined : 1337);
-		this.strapi_url =
-			`${this.strapi_protocol}://` +
-			`${this.options_.strapi_host ?? 'localhost'}` +
-			`${this.strapi_port ? ':' + this.strapi_port : ''}`;
-
-
+		this.options = options;
+		
 		// Set the helpers
-		this.redisHelper = new RedisHelper(container.eventBusService, container.redisClient);
-		this.strapiHelper = new StrapiHelper(container.logger, this.strapi_url, this.strapiSuperAdminAuthToken, options);
-
-		// Check if the strapi server is healthy
-		this.strapiHelper.getServer().executeStrapiHealthCheck().then(
-			async (res) => {
-				if (res && this.options_.auto_start) {
-					StrapiServerManager.isHealthy = res;
-					let startupStatus;
-
-					try {
-						const startUpResult = await this.strapiHelper.getServer().startInterface();
-						startupStatus = startUpResult.status < 300;
-					} catch (error) {
-						this.loggerHelper.log('error', error.message);
-					}
-
-					if (!startupStatus) {
-						throw new Error('strapi startup error');
-					}
-				}
-			}
-		);
+		let props = {
+			redisClient: container.redisClient,
+			eventBusService: container.eventBusService,
+			logger: this.loggerHelper.getLogger(),
+		};
+		this.strapiHelper = new StrapiHelper(props, this.strapiSuperAdminAuthToken, options);
+		this.redisHelper = this.strapiHelper.getRedisHelper();
 	}
 
 	getAuthInterface(): AuthInterface {
@@ -161,71 +130,18 @@ export class UpdateStrapiService extends TransactionBaseService {
 				productCollectionService: this.productCollectionService,
 				productCategoryService: this.productCategoryService,
 			},
-			this.options_
+			this.options
 		);
 
 		this.transactionManager_ = transactionManager;
 		return cloned as this;
 	}
 
-
-
-	async getVariantEntries_(variants, authInterface: AuthInterface): Promise<StrapiResult> {
-		// eslint-disable-next-line no-useless-catch
-		try {
-			return { status: 400 };
-		} catch (error) {
-			throw error;
-		}
-	}
-
-	async createImageAssets(product: Product, authInterface: AuthInterface): Promise<StrapiResult> {
-		const assets = await Promise.all(
-			product.images
-				?.filter((image) => image.url !== product.thumbnail)
-				.map(async (image) => {
-					const result = await this.strapiHelper.createEntryInStrapi({
-						type: 'images',
-						id: product.id,
-						authInterface,
-						data: image,
-						method: 'post',
-					});
-					return result;
-				})
-		);
-		return assets ? { status: 200, data: assets } : { status: 400 };
-	}
-
-	getCustomField(field, type): string {
-		const customOptions = this.options_[`custom_${type}_fields`];
-
-		if (customOptions) {
-			return customOptions[field] || field;
-		} else {
-			return field;
-		}
-	}
-
-	async createEntityInStrapi<T extends BaseEntity>(params: CreateInStrapiParams<T>): Promise<StrapiResult> {
-		await this.checkType(params.strapiEntityType, params.authInterface);
-		const entity = await params.medusaService.retrieve(params.id, {
-			select: params.selectFields,
-			relations: params.relations,
-		});
-		if (entity) {
-			const result = await this.strapiHelper.createEntryInStrapi({
-				type: params.strapiEntityType,
-				authInterface: params.authInterface,
-				data: entity,
-				method: 'POST',
-			});
-			return result;
-		}
-	}
-
+	/**
+	 * Public method to get entities from Strapi
+	 */
 	async getEntitiesFromStrapi(params: GetFromStrapiParams): Promise<StrapiGetResult> {
-		await this.checkType(params.strapiEntityType, params.authInterface);
+		await this.strapiHelper.checkType(params.strapiEntityType, params.authInterface);
 
 		const getEntityParams: StrapiSendParams = {
 			type: params.strapiEntityType,
@@ -258,21 +174,178 @@ export class UpdateStrapiService extends TransactionBaseService {
 		}
 	}
 
-	async createProductTypeInStrapi(productTypeId: string, authInterface: AuthInterface): Promise<StrapiResult> {
-		return await this.createEntityInStrapi({
-			id: productTypeId,
-			authInterface: authInterface,
+	/**
+	 * Create region in Strapi
+	 */
+	async createRegionInStrapi(regionId: string, authInterface: AuthInterface): Promise<StrapiResult> {
+		try {
+			await this.strapiHelper.checkType('regions', authInterface);
 
-			strapiEntityType: 'product-types',
-			medusaService: this.productTypeService_,
-			selectFields: ['id', 'value'],
-			relations: [],
-		});
+			// Get the entity
+			const entity = await this.regionService_.retrieve(regionId, {
+				relations: ['payment_providers', 'fulfillment_providers', 'currency'],
+				select: ['id', 'name', 'tax_rate', 'tax_code', 'metadata'],
+			});
+
+			if (entity) {
+				const data = cloneDeep(entity);
+				return await this.strapiHelper.createEntryInStrapi({
+					type: 'regions',
+					id: regionId,
+					authInterface,
+					data: data
+				});
+			}
+		} catch (error) {
+			this.loggerHelper.log('error', `unable to create region ${regionId} ${error.message}`);
+		}
 	}
 
+	/**
+	 * Create product type in Strapi
+	 */
+	async createProductTypeInStrapi(productTypeId: string, authInterface: AuthInterface): Promise<StrapiResult> {
+		try {
+			await this.strapiHelper.checkType('product-types', authInterface);
+
+			// Get the entity
+			const entity = await this.productTypeService_.retrieve(productTypeId, {
+				select: ['id', 'value'],
+				relations: [],
+			});
+
+			if (entity) {
+				const data = cloneDeep(entity);
+				const result = await this.strapiHelper.createEntryInStrapi({
+					type: 'product-types',
+					id: productTypeId,
+					authInterface: authInterface,
+					data: data
+				});
+				return result;
+			}
+		} catch (error) {
+			this.loggerHelper.log('error', `unable to create productType ${productTypeId} ${error.message}`);
+		}
+	}
+
+	/**
+	 * Create product collection in Strapi
+	 */
+	async createCollectionInStrapi(collectionId: string, authInterface: AuthInterface): Promise<StrapiResult> {
+		try {
+			await this.strapiHelper.checkType('product-collections', authInterface);
+
+			// Get the entity
+			const entity = await this.productCollectionService.retrieve(collectionId);
+
+			if (entity) {
+				const data = cloneDeep(entity);
+				const result = await this.strapiHelper.createEntryInStrapi({
+					type: 'product-collections',
+					id: collectionId,
+					authInterface,
+					data: data
+				});
+				return result;
+			}
+		} catch (error) {
+			this.loggerHelper.log('error', `unable to create collection ${collectionId} ${error.message}`);
+		}
+	}
+
+	/**
+	 * Create product category in Strapi
+	 */
+	async createCategoryInStrapi(categoryId: string, authInterface: AuthInterface): Promise<StrapiResult> {
+		try {
+			await this.strapiHelper.checkType('product-categories', authInterface);
+			
+			// Get the entity
+			const entity = await this.productCategoryService.retrieve(categoryId);
+
+			if (entity) {
+				const data = cloneDeep(entity);
+				const result = await this.strapiHelper.createEntryInStrapi({
+					type: 'product-categories',
+					id: categoryId,
+					authInterface,
+					data: data
+				});
+				return result;
+			}
+		} catch (error) {
+			this.loggerHelper.log('error', `unable to create category ${categoryId} ${error.message}`);
+		}
+	}
+
+	/**
+	 * Create product metafield in Strapi
+	 */
+	async createProductMetafieldInStrapi(metafieldId: string, authInterface: AuthInterface =this.getAuthInterface()
+	): Promise<StrapiResult> {
+		try {
+			await this.strapiHelper.checkType('product-metafields', authInterface);
+
+			// Get the entity
+			const entity = await this.productService_.retrieve(metafieldId);
+
+			if (entity) {
+				const data = cloneDeep(entity);
+				const result = await this.strapiHelper.createEntryInStrapi({
+					type: 'product-metafields',
+					id: data.id,
+					authInterface,
+					data: data
+				});
+				return result;
+			}
+		} catch (error) {
+			this.loggerHelper.log('error', `unable to create metafield ${metafieldId} ${error.message}`);
+		}
+	}
+	
+	/**
+	 * Create product variant in Strapi
+	 */
+	async createProductVariantInStrapi(variantId, authInterface: AuthInterface): Promise<StrapiResult> {
+		try {
+			await this.strapiHelper.checkType('product-variants', authInterface);
+
+			// Get the entity
+			const entity = await this.productVariantService_.retrieve(variantId, {
+				relations: ['prices', 'options', 'product'],
+			});
+
+			if (entity) {
+				const data = cloneDeep(entity);
+
+				// Remove money_amount from prices
+				data['money_amount'] = cloneDeep(data.prices);
+				delete data.prices;
+				// Remove product option values from options ???
+				data['product_option_value'] = cloneDeep(data.options);
+
+				return await this.strapiHelper.createEntryInStrapi({
+					type: 'product-variants',
+					id: variantId,
+					authInterface,
+					data: data
+				});
+			}
+		} catch (error) {
+			this.loggerHelper.log('error', `unable to create variant ${variantId} ${error.message}`);
+		}
+	}
+
+	/**
+	 * Create product in Strapi
+	 */
 	async createProductInStrapi(productId, authInterface: AuthInterface): Promise<StrapiResult> {
 		try {
-			const product = await this.productService_.retrieve(productId, {
+			await this.strapiHelper.checkType('products', authInterface);
+
+			const entity = await this.productService_.retrieve(productId, {
 				relations: [
 					'options',
 					'variants',
@@ -289,42 +362,197 @@ export class UpdateStrapiService extends TransactionBaseService {
 			/**
 			 * Todo implement schema validator
 			 */
-			if (product) {
-				const productToSend = cloneDeep(product);
-				productToSend['product_type'] = cloneDeep(productToSend.type);
-				delete productToSend.type;
-				productToSend['product_tags'] = cloneDeep(productToSend.tags);
-				delete productToSend.tags;
-				productToSend['product_options'] = cloneDeep(productToSend.options);
-				delete productToSend.options;
-				productToSend['product_variants'] = cloneDeep(productToSend.variants);
-				delete productToSend.variants;
+			if (entity) {
+				const data = cloneDeep(entity);
 
-				productToSend['product_collection'] = cloneDeep(productToSend.collection);
-				delete productToSend.collection;
+				// This part of code seems to be very important, we cannot remove it
 
-				productToSend['product_categories'] = cloneDeep(productToSend.categories);
-				delete productToSend.categories;
-				this.loggerHelper.log('info', `creating product in strapi - ${JSON.stringify(productToSend)}`);
+				// Remove product type
+				// Here, we must change product_type to type_id
+				// Then call the create type method
+				data['product_type'] = cloneDeep(data.type);
+				delete data.type;
+				// Remove product tags
+				data['product_tags'] = cloneDeep(data.tags);
+				delete data.tags;
+				// Remove product options
+				data['product_options'] = cloneDeep(data.options);
+				delete data.options;
+				// Remove product variants
+				data['product_variants'] = cloneDeep(data.variants);
+				delete data.variants;
+				// Remove product collection
+				// Here, we see the relation with the collection has been removed
+				data['product_collection'] = cloneDeep(data.collection);
+				delete data.collection;
+				// Remove product categories
+				// For categories, we see the relation on the categoruy w/ the product
+				// but not the product
+				data['product_categories'] = cloneDeep(data.categories);
+				delete data.categories;
+				
 				const result = await this.strapiHelper.createEntryInStrapi({
 					type: 'products',
 					authInterface,
-					data: productToSend,
-					method: 'POST',
+					data: data
 				});
 				return result;
 			}
 		} catch (error) {
-			throw error;
+			this.loggerHelper.log('error', `unable to create product ${productId} ${error.message}`);
 		}
 	}
 
-	async updateCollectionInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
-		const updateFields = ['handle', 'title'];
+	/**
+	 * Create product image in Strapi
+	 */
+	async createImageAssets(product: Product, authInterface: AuthInterface): Promise<StrapiResult> {
+		const assets = await Promise.all(
+			product.images
+				?.filter((image) => image.url !== product.thumbnail)
+				.map(async (image) => {
+					const result = await this.strapiHelper.createEntryInStrapi({
+						type: 'images',
+						id: product.id,
+						authInterface,
+						data: image
+					});
+					return result;
+				})
+		);
+		return assets ? { status: 200, data: assets } : { status: 400 };
+	}
 
-		// Update came directly from product collection service so only act on a couple
-		// of fields. When the update comes from the product we want to ensure
-		// references are set up correctly so we run through everything.
+	/**
+	 * Delete product metafield in Strapi
+	 */
+	async deleteProductMetafieldInStrapi(data: { id: string }, authInterface: AuthInterface): Promise<StrapiResult> {
+		let command = {
+			type: 'product-metafields',
+			id: data.id,
+			authInterface
+		};
+
+		return await this.strapiHelper.deleteEntryInStrapi(command);
+	}
+
+	/**
+	 * Delete product in Strapi
+	 */
+	async deleteProductInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
+		let command = {
+			type: 'products',
+			id: data.id, // Here, it does not read id
+			authInterface
+		};
+		return await this.strapiHelper.deleteEntryInStrapi(command);
+	}
+
+	/**
+	 * Delete product type in Strapi
+	 */
+	async deleteProductTypeInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
+		let command = {
+			type: 'product-types',
+			id: data.id,
+			authInterface
+		};
+		return await this.strapiHelper.deleteEntryInStrapi(command);
+	}
+
+	/**
+	 * Delete product variant in Strapi
+	 */
+	async deleteProductVariantInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
+		let command = {
+			type: 'product-variants',
+			id: data.id,
+			authInterface
+		};
+		return await this.strapiHelper.deleteEntryInStrapi(command);
+	}
+
+	/**
+	 * Delete region in Strapi
+	 */
+	async deleteRegionInStrapi(data, authInterface): Promise<StrapiResult> {
+		let command = {
+			type: 'regions',
+			id: data.id,
+			authInterface
+		};
+		return await this.strapiHelper.deleteEntryInStrapi(command);
+	}
+
+	/*
+	 * Delete collection in Strapi
+	 */
+	async deleteCollectionInStrapi(data, authInterface): Promise<StrapiResult> {
+		let command = {
+			type: 'product-collections',
+			id: data.id,
+			authInterface
+		};
+		return await this.strapiHelper.deleteEntryInStrapi(command);
+	}
+
+	/**
+	 * Delete category in Strapi
+	 */
+	async deleteCategoryInStrapi(data, authInterface): Promise<StrapiResult> {
+		let command = {
+			type: 'product-categories',
+			id: data.id,
+			authInterface
+		};
+		return await this.strapiHelper.deleteEntryInStrapi(command);
+	}
+
+	/**
+	 * Update region in Strapi
+	 */
+	async updateRegionInStrapi(data, authInterface: AuthInterface = this.getAuthInterface()): Promise<StrapiResult> {
+
+		// check if update contains any fields in Strapi to minimize runs
+		const updateFields = ['name', 'currency_code', 'countries', 'payment_providers', 'fulfillment_providers'];
+		const found = this.verifyDataContainsFields(data, updateFields);
+		if (!found) {
+			return { status: 400 };
+		}
+
+		try {
+			const region = await this.regionService_.retrieve(data.id, {
+				relations: ['countries', 'payment_providers', 'fulfillment_providers', 'currency'],
+				select: ['id', 'name', 'tax_rate', 'tax_code', 'metadata'],
+			});
+
+			if (region) {
+				// Update entry in Strapi
+				const response = await this.strapiHelper.updateEntryInStrapi({
+					type: 'regions',
+					id: region.id,
+					authInterface,
+					data: { ...region, ...data },
+				});
+				this.loggerHelper.log('info', 'Region Strapi Id - ', response);
+				return response;
+			} else {
+				return { status: 400 };
+			}
+		} catch (error) {
+			return { status: 400 };
+		}
+	}
+
+	/**
+	 * Update collection in Strapi
+	 * this comes directly from product collection service so only act on a couple
+	 * of fields. When the update comes from the product we want to ensure
+	 * references are set up correctly so we run through everything.
+	 */
+	async updateCollectionInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
+
+		const updateFields = ['handle', 'title'];
 		if (data.fields) {
 			const found =
 				data.fields.find((f) => updateFields.includes(f)) || this.verifyDataContainsFields(data, updateFields);
@@ -334,11 +562,6 @@ export class UpdateStrapiService extends TransactionBaseService {
 		}
 
 		try {
-			const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-			if (ignore) {
-				return { status: 400 };
-			}
-
 			const collection = await this.productCollectionService.retrieve(data.id, {
 				relations: ['products'],
 			});
@@ -370,34 +593,15 @@ export class UpdateStrapiService extends TransactionBaseService {
 		}
 	}
 
-	async createCollectionInStrapi(collectionId: string, authInterface: AuthInterface): Promise<StrapiResult> {
-		try {
-			const collection = await this.productCollectionService.retrieve(collectionId);
-
-			// this.loggerHelper.log("info",variant)
-			if (collection) {
-				const collectionToSend = cloneDeep(collection);
-
-				const result = await this.strapiHelper.createEntryInStrapi({
-					type: 'product-collections',
-					id: collectionId,
-					authInterface,
-					data: collectionToSend,
-					method: 'POST',
-				});
-				return result;
-			}
-		} catch (error) {
-			this.loggerHelper.log('error', `unable to create collection ${collectionId} ${error.message}`);
-		}
-	}
-
+	/**
+	 * Update category in Strapi
+	 * this comes directly from product category service so only act on a couple
+	 * of fields. When the update comes from the product we want to ensure
+	 * references are set up correctly so we run through everything.
+	 */
 	async updateCategoryInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
+		
 		const updateFields = ['handle', 'name'];
-
-		// Update came directly from product category service so only act on a couple
-		// of fields. When the update comes from the product we want to ensure
-		// references are set up correctly so we run through everything.
 		if (data.fields) {
 			const found =
 				data.fields.find((f) => updateFields.includes(f)) || this.verifyDataContainsFields(data, updateFields);
@@ -441,165 +645,80 @@ export class UpdateStrapiService extends TransactionBaseService {
 		}
 	}
 
-	async createCategoryInStrapi(categoryId: string, authInterface: AuthInterface): Promise<StrapiResult> {
-		try {
-			const category = await this.productCategoryService.retrieve(categoryId);
-
-			if (category) {
-				const categoryToSend = cloneDeep(category);
-
-				const result = await this.strapiHelper.createEntryInStrapi({
-					type: 'product-categories',
-					id: categoryId,
-					authInterface,
-					data: categoryToSend,
-					method: 'POST',
-				});
-				return result;
-			}
-		} catch (error) {
-			this.loggerHelper.log('error', `unable to create category ${categoryId} ${error.message}`);
-		}
-	}
-
-	async createProductVariantInStrapi(variantId, authInterface: AuthInterface): Promise<StrapiResult> {
-		// eslint-disable-next-line no-useless-catch
-		try {
-			const variant = await this.productVariantService_.retrieve(variantId, {
-				relations: ['prices', 'options', 'product'],
-			});
-
-			if (variant) {
-				const variantToSend = cloneDeep(variant);
-				variantToSend['money_amount'] = cloneDeep(variantToSend.prices);
-				delete variantToSend.prices;
-
-				variantToSend['product_option_value'] = cloneDeep(variantToSend.options);
-
-				return await this.strapiHelper.createEntryInStrapi({
-					type: 'product-variants',
-					id: variantId,
-					authInterface,
-					data: variantToSend,
-					method: 'POST',
-				});
-			}
-		} catch (error) {
-			throw error;
-		}
-	}
-
-	convertOptionValueToMedusaReference(data): Record<string, any> {
-		const keys = Object.keys(data);
-		for (const key of keys) {
-			if (key != 'medusa_id' && key.includes('_id')) {
-				const medusaService = key.split('_')[0];
-				const fieldName = `product_${medusaService}`;
-				const value = data[key];
-
-				data[fieldName] = {
-					medusa_id: value,
-				};
-			}
-		}
-		return data;
-	}
-
-	async createRegionInStrapi(regionId, authInterface: AuthInterface): Promise<StrapiResult> {
-		try {
-			const region = await this.regionService_.retrieve(regionId, {
-				relations: ['payment_providers', 'fulfillment_providers', 'currency'],
-				select: ['id', 'name', 'tax_rate', 'tax_code', 'metadata'],
-			});
-
-			return await this.strapiHelper.createEntryInStrapi({
-				type: 'regions',
-				id: regionId,
-				authInterface,
-				data: region,
-				method: 'post',
-			});
-		} catch (error) {
-			throw error;
-		}
-	}
-
-	async updateRegionInStrapi(data, authInterface: AuthInterface = this.getAuthInterface()): Promise<StrapiResult> {
-		const updateFields = ['name', 'currency_code', 'countries', 'payment_providers', 'fulfillment_providers'];
-
-		// check if update contains any fields in Strapi to minimize runs
-		const found = this.verifyDataContainsFields(data, updateFields);
-		if (!found) {
-			return { status: 400 };
-		}
-
-		// eslint-disable-next-line no-useless-catch
-		try {
-			const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-			if (ignore) {
-				return { status: 400 };
-			}
-
-			const region = await this.regionService_.retrieve(data.id, {
-				relations: ['countries', 'payment_providers', 'fulfillment_providers', 'currency'],
-				select: ['id', 'name', 'tax_rate', 'tax_code', 'metadata'],
-			});
-
-			if (region) {
-				// Update entry in Strapi
-				const response = await this.strapiHelper.updateEntryInStrapi({
-					type: 'regions',
-					id: region.id,
-					authInterface,
-					data: { ...region, ...data },
-				});
-				this.loggerHelper.log('info', 'Region Strapi Id - ', response);
-				return response;
-			} else {
-				return { status: 400 };
-			}
-		} catch (error) {
-			return { status: 400 };
-			throw error;
-		}
-	}
 	/**
-	 * Product metafields id is the same as product id
-	 * @param data
-	 * @param authInterface
-	 * @returns
+	 * Update product type in Strapi
+	 * this comes directly from product type service so only act on a couple
+	 * of fields. When the update comes from the product we want to ensure
+	 * references are set up correctly so we run through everything.
 	 */
-
-	async createProductMetafieldInStrapi(
-		data: { id: string; value: Record<string, unknown> },
-		authInterface: AuthInterface =this.getAuthInterface()
-	): Promise<StrapiResult> {
-		const typeExists = await this.checkType('product-metafields', authInterface);
-		if (!typeExists) {
-			return { status: 400 };
+	async updateProductVariantInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
+		const updateFields = [
+			'title',
+			'prices',
+			'sku',
+			'material',
+			'weight',
+			'length',
+			'height',
+			'origin_country',
+			'options',
+		];
+		let response = { status: 400 };
+		if (data.fields) {
+			const found =
+				data.fields.find((f) => updateFields.includes(f)) || this.verifyDataContainsFields(data, updateFields);
+			if (!found) {
+				return { status: 400 };
+			}
 		}
 
-		const productInfo = await this.productService_.retrieve(data.id);
-		const dataToInsert: BaseEntity = {
-			...cloneDeep(data),
-			created_at: productInfo.created_at,
-			updated_at: productInfo.updated_at,
-		};
+		try {
+			let variant;
+			try {
+				variant = await this.productVariantService_.retrieve(data.id, {
+					relations: ['prices', 'options'],
+				});
+				this.loggerHelper.log('info', JSON.stringify(variant));
+				try {
+					if (variant) {
+						// Update entry in Strapi
 
-		return await this.strapiHelper.createEntryInStrapi({
-			type: 'product-metafields',
-			id: data.id,
-			authInterface,
-			data: dataToInsert,
-			method: 'post',
-		});
+						response = await this.strapiHelper.updateEntryInStrapi({
+							type: 'product-variants',
+							id: variant.id,
+							authInterface,
+							data: { ...variant, ...data },
+							method: 'put',
+							query: data.query,
+						});
+						this.loggerHelper.log('info', 'Variant Strapi Id - ', response);
+						return response;
+					}
+				} catch (e) {
+					this.loggerHelper.log('info', JSON.stringify(variant));
+				}
+			} catch (e) {
+				if (!variant) {
+					response = await this.createProductVariantInStrapi(data.id, authInterface);
+					this.loggerHelper.log('info', 'Created Variant Strapi Id - ', response);
+					return response;
+				}
+			}
+			return response;
+		} catch (error) {
+			this.loggerHelper.log('info', 'Failed to update product variant', data.id);
+			return { status: 400 };
+		}
 	}
 
+	/**
+	 * Update product metafield in Strapi
+	 */
 	async updateProductMetafieldInStrapi(
 		data: { id: string; value: Record<string, unknown> },
 		authInterface: AuthInterface
 	): Promise<StrapiResult> {
-		const typeExists = await this.checkType('product-metafields', authInterface);
+		const typeExists = await this.strapiHelper.checkType('product-metafields', authInterface);
 		if (!typeExists) {
 			return { status: 400 };
 		}
@@ -621,83 +740,9 @@ export class UpdateStrapiService extends TransactionBaseService {
 		});
 	}
 
-	async updateProductsWithinCollectionInStrapi(
-		data,
-		authInterface: AuthInterface = this.getAuthInterface()
-	): Promise<StrapiResult> {
-		const updateFields = ['productIds', 'productCollection'];
-
-		if (!this.verifyDataContainsFields(data, updateFields)) {
-			return { status: 400 };
-		}
-		try {
-			for (const productId of data.productIds) {
-				const ignore = await this.redisHelper.shouldIgnore(productId, 'strapi');
-				if (ignore) {
-					this.loggerHelper.log(
-						'info',
-						'Strapi has just added this product to collection which triggered this function. IGNORING... '
-					);
-					continue;
-				}
-
-				const product = await this.productService_.retrieve(productId, {
-					relations: ['collection'],
-					select: ['id'],
-				});
-
-				if (product) {
-					// we're sending requests sequentially as the Strapi is having problems with deadlocks otherwise
-					await this.adjustProductAndUpdateInStrapi(product, data, authInterface);
-				}
-			}
-			return { status: 200 };
-		} catch (error) {
-			this.loggerHelper.log('error', 'Error updating products in collection', error);
-			throw error;
-		}
-		return { status: 400 };
-	}
-
-	async updateProductsWithinCategoryInStrapi(
-		data,
-		authInterface: AuthInterface = this.getAuthInterface()
-	): Promise<StrapiResult> {
-
-		const updateFields = ['productIds', 'productCategories'];
-
-		if (!this.verifyDataContainsFields(data, updateFields)) {
-			return { status: 400 };
-		}
-		try {
-			for (const productId of data.productIds) {
-				const ignore = await this.redisHelper.shouldIgnore(productId, 'strapi');
-				if (ignore) {
-					this.loggerHelper.log(
-						'info',
-						'Strapi has just added this product to category which triggered this function. IGNORING... '
-					);
-					continue;
-				}
-
-				const product = await this.productService_.retrieve(productId, {
-					relations: ['category'],
-					select: ['id'],
-				});
-
-				if (product) {
-					// we're sending requests sequentially as the Strapi is having problems with deadlocks otherwise
-					await this.adjustProductAndUpdateInStrapi(product, data, authInterface);
-				}
-			}
-			return { status: 200 };
-		} catch (error) {
-			this.loggerHelper.log('error', 'Error updating products in category', error);
-			throw error;
-		}
-		return { status: 400 };
-	}
-
+	/**
+	 * Update product in Strapi
+	 */
 	async updateProductInStrapi(
 		data: Partial<Product>,
 		authInterface: AuthInterface = this.getAuthInterface()
@@ -729,14 +774,6 @@ export class UpdateStrapiService extends TransactionBaseService {
 
 		// eslint-disable-next-line no-useless-catch
 		try {
-			const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-			if (ignore) {
-				this.loggerHelper.log(
-					'info',
-					'Strapi has just updated this product' + ' which triggered this function. IGNORING... '
-				);
-				return { status: 400 };
-			}
 			try {
 				const product = await this.productService_.retrieve(data.id, {
 					relations: [
@@ -787,13 +824,150 @@ export class UpdateStrapiService extends TransactionBaseService {
 		}
 	}
 
+	/**
+	 * Update product within collection in Strapi
+	 */
+	async updateProductsWithinCollectionInStrapi(
+		data,
+		authInterface: AuthInterface = this.getAuthInterface()
+	): Promise<StrapiResult> {
+		const updateFields = ['productIds', 'productCollection'];
+
+		if (!this.verifyDataContainsFields(data, updateFields)) {
+			return { status: 400 };
+		}
+		try {
+			for (const productId of data.productIds) {
+				const product = await this.productService_.retrieve(productId, {
+					relations: ['collection'],
+					select: ['id'],
+				});
+
+				if (product) {
+					// we're sending requests sequentially as the Strapi is having problems with deadlocks otherwise
+					await this.adjustProductAndUpdateInStrapi(product, data, authInterface);
+				}
+			}
+			return { status: 200 };
+		} catch (error) {
+			this.loggerHelper.log('error', 'Error updating products in collection', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update product within category in Strapi
+	 */
+	async updateProductsWithinCategoryInStrapi(
+		data,
+		authInterface: AuthInterface = this.getAuthInterface()
+	): Promise<StrapiResult> {
+
+		const updateFields = ['productIds', 'productCategories'];
+
+		if (!this.verifyDataContainsFields(data, updateFields)) {
+			return { status: 400 };
+		}
+		try {
+			for (const productId of data.productIds) {
+				const product = await this.productService_.retrieve(productId, {
+					relations: ['category'],
+					select: ['id'],
+				});
+
+				if (product) {
+					// we're sending requests sequentially as the Strapi is having problems with deadlocks otherwise
+					await this.adjustProductAndUpdateInStrapi(product, data, authInterface);
+				}
+			}
+			return { status: 200 };
+		} catch (error) {
+			this.loggerHelper.log('error', 'Error updating products in category', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Helper function to check if an entry exists in Strapi
+	 */
+	async doesEntryExistInStrapi(
+		type: string,
+		id: string,
+
+		authInterface: AuthInterface
+	): Promise<StrapiResult> {
+
+		return await this.strapiHelper.processStrapiEntry({
+			method: 'get',
+			type,
+			id,
+			authInterface,
+		});
+	}
+
+	/**
+	 * Helper function to check if data contains fields
+	 */
+	verifyDataContainsFields(data: any, updateFields: any[]): boolean {
+		if (!data || isEmpty(data)) return false;
+		let found = data.fields?.find((f) => updateFields.includes(f));
+		if (!found) {
+			try {
+				const fieldsOfdata = Object.keys(data);
+				found = fieldsOfdata.some((field) => {
+					return updateFields.some((uf) => {
+						return uf == field;
+					});
+				});
+			} catch (e) {
+				this.loggerHelper.log('error', JSON.stringify(e));
+			}
+		}
+		return found;
+	}
+
+	/**
+	 * Helper function to get custom field
+	 */
+	getCustomField(field, type): string {
+		const customOptions = this.options[`custom_${type}_fields`];
+
+		if (customOptions) {
+			return customOptions[field] || field;
+		} else {
+			return field;
+		}
+	}
+
+	/**
+	 * Helper fonction to convert option value to medusa reference
+	 */
+	convertOptionValueToMedusaReference(data): Record<string, any> {
+		const keys = Object.keys(data);
+		for (const key of keys) {
+			if (key != 'medusa_id' && key.includes('_id')) {
+				const medusaService = key.split('_')[0];
+				const fieldName = `product_${medusaService}`;
+				const value = data[key];
+
+				data[fieldName] = {
+					medusa_id: value,
+				};
+			}
+		}
+		return data;
+	}
+
+	/**
+	 * Helper function to adjust product and update in Strapi
+	 * Medusa is not using consistent naming for product-*.
+	 * We have to adjust it manually. For example: collection to product-collection
+	 */
 	private async adjustProductAndUpdateInStrapi(
 		product: Product,
 		data: Partial<Product>,
 		authInterface: AuthInterface
 	) {
-		// Medusa is not using consistent naming for product-*.
-		// We have to adjust it manually. For example: collection to product-collection
 		const dataToUpdate = { ...product, ...data };
 
 		const keysToUpdate = ['collection', 'categories', 'type', 'tags', 'variants', 'options'];
@@ -813,230 +987,5 @@ export class UpdateStrapiService extends TransactionBaseService {
 		});
 		return response;
 	}
-
-	async checkType(type, authInterface): Promise<boolean> {
-		let result: StrapiResult;
-		try {
-			result = await this.getType(type, authInterface);
-		} catch (error) {
-			this.loggerHelper.log('error', `${type} type not found in strapi`);
-			this.loggerHelper.log('error', JSON.stringify(error));
-			result = undefined;
-		}
-		return result ? true : false;
-	}
-
-	async updateProductVariantInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
-		const updateFields = [
-			'title',
-			'prices',
-			'sku',
-			'material',
-			'weight',
-			'length',
-			'height',
-			'origin_country',
-			'options',
-		];
-		let response = { status: 400 };
-		// Update came directly from product variant service so only act on a couple
-		// of fields. When the update comes from the product we want to ensure
-		// references are set up correctly so we run through everything.
-		if (data.fields) {
-			const found =
-				data.fields.find((f) => updateFields.includes(f)) || this.verifyDataContainsFields(data, updateFields);
-			if (!found) {
-				return { status: 400 };
-			}
-		}
-
-		try {
-			let variant;
-			const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-			if (ignore) {
-				return { status: 400 };
-			}
-			try {
-				variant = await this.productVariantService_.retrieve(data.id, {
-					relations: ['prices', 'options'],
-				});
-				this.loggerHelper.log('info', JSON.stringify(variant));
-				try {
-					if (variant) {
-						// Update entry in Strapi
-
-						response = await this.strapiHelper.updateEntryInStrapi({
-							type: 'product-variants',
-							id: variant.id,
-							authInterface,
-							data: { ...variant, ...data },
-							method: 'put',
-							query: data.query,
-						});
-						this.loggerHelper.log('info', 'Variant Strapi Id - ', response);
-						return response;
-					}
-				} catch (e) {
-					this.loggerHelper.log('info', JSON.stringify(variant));
-				}
-			} catch (e) {
-				if (!variant) {
-					response = await this.createProductVariantInStrapi(data.id, authInterface);
-					this.loggerHelper.log('info', 'Created Variant Strapi Id - ', response);
-					return response;
-				}
-			}
-			return response;
-		} catch (error) {
-			this.loggerHelper.log('info', 'Failed to update product variant', data.id);
-			return { status: 400 };
-		}
-	}
-
-	async deleteProductMetafieldInStrapi(data: { id: string }, authInterface: AuthInterface): Promise<StrapiResult> {
-		const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-		if (ignore) {
-			return { status: 400 };
-		}
-
-		return await this.strapiHelper.deleteEntryInStrapi({
-			type: 'product-metafields',
-			id: data.id,
-			authInterface,
-			method: 'delete',
-		});
-	}
-
-	async deleteProductInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
-		const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-		if (ignore) {
-			return { status: 400 };
-		}
-
-		return await this.strapiHelper.deleteEntryInStrapi({
-			type: 'products',
-			id: data.id,
-			authInterface,
-			method: 'delete',
-		});
-	}
-
-	async deleteProductTypeInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
-		const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-		if (ignore) {
-			return { status: 400 };
-		}
-
-		return await this.strapiHelper.deleteEntryInStrapi({
-			type: 'product-types',
-			id: data.id,
-			authInterface,
-			method: 'delete',
-		});
-	}
-
-	async deleteProductVariantInStrapi(data, authInterface: AuthInterface): Promise<StrapiResult> {
-
-		const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-		if (ignore) {
-			return { status: 400 };
-		}
-
-		return await this.strapiHelper.deleteEntryInStrapi({
-			type: 'product-variants',
-			id: data.id,
-			authInterface,
-			method: 'delete',
-		});
-	}
-
-	// Blocker - Delete Region API
-	async deleteRegionInStrapi(data, authInterface): Promise<StrapiResult> {
-
-		const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-		if (ignore) {
-			return { status: 400 };
-		}
-
-		return await this.strapiHelper.deleteEntryInStrapi({
-			type: 'regions',
-			id: data.id,
-			authInterface,
-			method: 'delete',
-		});
-	}
-
-	async deleteCollectionInStrapi(data, authInterface): Promise<StrapiResult> {
-
-		const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-		if (ignore) {
-			return { status: 400 };
-		}
-
-		return await this.strapiHelper.deleteEntryInStrapi({
-			type: 'product-collections',
-			id: data.id,
-			authInterface,
-			method: 'delete',
-		});
-	}
-	async deleteCategoryInStrapi(data, authInterface): Promise<StrapiResult> {
-
-		const ignore = await this.redisHelper.shouldIgnore(data.id, 'strapi');
-		if (ignore) {
-			return { status: 400 };
-		}
-
-		return await this.strapiHelper.deleteEntryInStrapi({
-			type: 'product-categories',
-			id: data.id,
-			authInterface,
-			method: 'delete',
-		});
-	}
-
-	async getType(type: string, authInterface: AuthInterface): Promise<StrapiResult> {
-		const result = await this.strapiHelper.strapiSendDataLayer({
-			method: 'get',
-			type,
-			authInterface,
-		});
-		return result;
-	}
-
-	async doesEntryExistInStrapi(
-		type: string,
-		id: string,
-
-		authInterface: AuthInterface
-	): Promise<StrapiResult> {
-
-		return await this.strapiHelper.processStrapiEntry({
-			method: 'get',
-			type,
-			id,
-			authInterface,
-		});
-	}
-
-	verifyDataContainsFields(data: any, updateFields: any[]): boolean {
-		if (!data || isEmpty(data)) return false;
-		let found = data.fields?.find((f) => updateFields.includes(f));
-		if (!found) {
-			try {
-				const fieldsOfdata = Object.keys(data);
-				found = fieldsOfdata.some((field) => {
-					return updateFields.some((uf) => {
-						return uf == field;
-					});
-				});
-			} catch (e) {
-				this.loggerHelper.log('error', JSON.stringify(e));
-			}
-		}
-		return found;
-	}
-
-
 }
 export default UpdateStrapiService;

@@ -8,6 +8,8 @@ yarn-error.log
 .idea
 
 coverage
+sonar-project.properties
+.scannerwork/**
 
 !src/**
 

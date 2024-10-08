@@ -61,6 +61,27 @@ export class StrapiServerManager {
         this.strapi_url = strapi_url;
         this.userTokens = {};
         this.strapiSuperAdminAuthToken = token;
+
+		// Check if the strapi server is healthy
+		this.executeStrapiHealthCheck().then(
+			async (res) => {
+				if (res && this.options.auto_start) {
+					StrapiServerManager.isHealthy = res;
+					let startupStatus;
+
+					try {
+						const startUpResult = await this.startInterface();
+						startupStatus = startUpResult.status < 300;
+					} catch (error) {
+						this.loggerHelper.log('error', error.message);
+					}
+
+					if (!startupStatus) {
+						throw new Error('strapi startup error');
+					}
+				}
+			}
+		);
     }
 
     /**
@@ -150,8 +171,6 @@ export class StrapiServerManager {
                 `\n Error  ${authInterface.email} while trying to login to strapi\n` + (error as Error).message
             );
         }
-
-        return;
     }
 
 	/**
@@ -592,8 +611,6 @@ export class StrapiServerManager {
 							method,
 							time: new Date(),
 						});
-						break;
-
 					default:
 						throw error;
 				}

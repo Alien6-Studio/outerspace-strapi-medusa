@@ -1,24 +1,18 @@
 import { Request, Response, Router } from 'express';
-import bodyParser from 'body-parser';
 import * as jwt from 'jsonwebtoken';
-
-import { parseCorsOrigins } from 'medusa-core-utils';
 import cors from 'cors';
-
 import authenticate from '@medusajs/medusa/dist/api/middlewares/authenticate';
-import { StrapiMedusaPluginOptions } from '../../../types/globals';
 import { ConfigModule } from '@medusajs/types';
 import { UserService } from '@medusajs/medusa';
+import { parseCorsOrigins } from 'medusa-core-utils';
+
+// Custom imports
+import { StrapiMedusaPluginOptions } from '../../../types/globals';
+
 
 const adminRouter = Router();
 export default (app: Router, options: StrapiMedusaPluginOptions, config: ConfigModule) => {
 	app.use('/strapi/admin', adminRouter);
-	const strapiUrl = `${options.strapi_protocol}://${options.strapi_host}:${options.strapi_port}`;
-
-	// Authenticated routes
-
-	// Calls all middleware that has been registered to run after authentication.
-
 	const adminUrl = config.projectConfig.admin_cors;
 	const adminCors = {
 		origin: parseCorsOrigins(adminUrl),

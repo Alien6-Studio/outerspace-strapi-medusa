@@ -24,7 +24,7 @@ export class IamStrapiService {
 
         // Initialize the Strapi helper
 		this.loggerHelper = new LoggerHelper(logger);
-        this.strapiHelper = new StrapiHelper(logger, strapi_url, token, options);
+        this.strapiHelper = new StrapiHelper(logger, token, options);
 		this.serverManager = this.strapiHelper.getServer();
         this.defaultAuthInterface = this.serverManager.getAuthInterface();
     }

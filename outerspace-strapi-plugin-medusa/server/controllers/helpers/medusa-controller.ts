@@ -65,7 +65,8 @@ async function controllerfindMany(ctx, strapi, uid) {
 		const entity = await strapi.entityService.findPage(uid, ctx.query);
 		strapi.log.debug(`requested  ${uid} query: ${JSON.stringify(ctx.query)}`);
 		if (entity && entity.results.length > 0) {
-			return (ctx.body = { data: entity.results, meta: entity.pagination });
+			ctx.body = { data: entity.results, meta: entity.pagination };
+			return (ctx.body);
 		}
 		return ctx.notFound(ctx);
 	} catch (e) {
@@ -87,7 +88,8 @@ async function controllerfindOne(ctx, strapi, uid) {
 		const entity = await getStrapiDataByMedusaId(uid, strapi, medusa_id, fields);
 
 		if (entity && entity.id) {
-			return (ctx.body = { data: entity });
+			ctx.body = { data: entity };
+			return (ctx.body);
 		}
 		return ctx.notFound(ctx);
 	} catch (e) {
@@ -108,7 +110,8 @@ async function controllerDelete(ctx, strapi, uid) {
 		}
 		const result = await strapi.services[uid].delete(entityId, { populate: '*' });
 		if (result) {
-			return (ctx.body = { deletedData: result });
+			ctx.body = { deletedData: result };
+			return (ctx.body);
 		}
 	} catch (e) {
 		handleError(strapi, e);
@@ -140,8 +143,8 @@ async function controllerCreate(ctx, strapi, uid) {
 		}
 
 		strapi.log.info(`created element ${uid} ${JSON.stringify(processedData)}`);
-		//const result = await getStrapiDataByMedusaId(uid, strapi, processedData.medusa_id, ['id', 'medusa']);
-		return (ctx.body = { data: processedData });
+		ctx.body = { data: processedData };
+		return (ctx.body);
 	} catch (e) {
 		handleError(strapi, e);
 		return ctx.internalServerError(ctx);
@@ -160,20 +163,20 @@ async function controllerUpdate(ctx, strapi, uid) {
 
 	try {
 		const entityId = await getStrapiIdFromMedusaId(uid, strapi, medusa_id);
+
 		if (entityId) {
 			strapi.log.debug('converting to strapi data - time: ' + Date.now());
 			const processedData = await createNestedEntity(uid, strapi, data);
 			strapi.log.debug('converted to strapi data - time: ' + Date.now());
 			delete processedData.medusa_id;
 			strapi.log.debug('updating strapi data ' + uid + ' - time: ' + Date.now());
+			
 			let result = await strapi.services[uid].update(entityId, {
 				data: { ...processedData, updateFrom: 'medusa' },
 			});
 			strapi.log.debug('updated updated strapi data ' + uid + ' - time: ' + Date.now());
-			//const returnResult = await strapi.db.query(uid).findOne(result.id);
-			return (ctx.body = {
-				data: result,
-			});
+			ctx.body = { data: result };
+			return (ctx.body);
 		} else {
 			strapi.log.warn(`Cannot update entity ${medusa_id} of type ${uid} as it doesnt exist in strapi`);
 			return ctx.notFound(ctx);

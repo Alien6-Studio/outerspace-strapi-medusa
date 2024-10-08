@@ -1,6 +1,4 @@
 import { Strapi } from '@strapi/strapi';
-
-import pluginId from './helpers/pluginId';
 import { config }  from './services/setup-service';
 
 const chalk = require('chalk');

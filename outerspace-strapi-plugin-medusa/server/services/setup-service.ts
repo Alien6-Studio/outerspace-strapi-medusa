@@ -5,7 +5,7 @@ import { default as axios } from 'axios';
 import _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
-import { determineUniqueField, createNestedEntity } from './utils';
+import { createNestedEntity } from './utils';
 
 let strapi: any;
 
@@ -106,7 +106,7 @@ export async function deleteAllEntries(): Promise<void> {
 	const permissions = await strapi.plugins['users-permissions'].services['users-permissions'].getActions(plugins);
 	// flush only apis
 	const apisToFlush = Object.keys(permissions).filter((value) => {
-		return value.startsWith('api::') != false;
+		return value.startsWith('api::');
 	});
 	for (const key of apisToFlush) {
 		const controllers = permissions[key].controllers;
@@ -162,11 +162,12 @@ export async function sendResult(type: string, result: any,origin:"medusa"|"stra
 		origin
 	});
 
-	if (postRequestResult?.status ?? (0 < 300 && postRequestResult?.status) ?? 0 >= 200) {
+	if ((postRequestResult?.status ?? 0) >= 200) {
 		strapi.log.info(`update to ${type} posted successfully`);
 	} else {
-		strapi.log.info(`error updating type ${type}  posted successfully`);
+		strapi.log.info(`error updating type ${type}`);
 	}
+	
 	return postRequestResult;
 }
 
@@ -292,7 +293,7 @@ export async function createMedusaUser(medusaUser: MedusaUserParams): Promise<an
 async function checkMedusaReady(medusaServer: string, timeout = 30e3, attempts = 1000): Promise<number> {
 
 	let medusaReady = false;
-	while (!medusaReady && !(process.env.NODE_ENV == 'test') && attempts--) {
+	while (!medusaReady && attempts--) {
 		try {
 			const response = await axios.head(`${medusaServer}/health`);
 			medusaReady = response.status < 300 && response.status >= 200;
@@ -476,9 +477,9 @@ async function synchroniseWithMedusa(): Promise<boolean | undefined> {
 		if (seedData) {
 			const dataSets = Object.keys(seedData.data);
 
-			for (let j = 0; j < dataSets.length; j++) {
+			for (const dataSet of dataSets) {
 				/** fetching more pages */
-				if (seedData.meta.hasMore[dataSets[j]]) {
+				if (seedData.meta.hasMore[dataSet]) {
 					continueSeed = true;
 					try {
 						strapi.log.info(`Continuing to sync: Page ${pageNumber + 1} `, medusaSeedHookUrl);

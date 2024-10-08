@@ -83,7 +83,7 @@ export default async (req: Request & { decodedMessage: StrapiSignalInterface }, 
 
 		// Retrieve the updateStrapiService from the request
 		const updateStrapiService = req.scope.resolve('updateStrapiService') as UpdateStrapiService;
-		const pageLimit = updateStrapiService.options_.max_page_size ?? 50;
+		const pageLimit = updateStrapiService.options.max_page_size ?? 50;
 		const pageNumber = req.decodedMessage?.data?.meta?.pageNumber ?? 1;
 
 		// Retrieve the necessary services from the request

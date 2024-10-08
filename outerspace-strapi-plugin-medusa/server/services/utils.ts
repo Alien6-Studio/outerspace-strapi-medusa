@@ -87,12 +87,9 @@ function findContentUid(name, strapi) {
                 pluralName.replace('iso-', '') === name  // Handling specific prefix like iso-country
             ) {
                 objectUid = `plugin::outerspace-strapi-plugin-medusa.${singularName}`;
-                return objectUid;
             }
         }
     }
-
-    strapi.log.warn(`No content type found for name: ${name}`);
     return objectUid;
 }
 

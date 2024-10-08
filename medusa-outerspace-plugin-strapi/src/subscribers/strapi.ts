@@ -143,7 +143,7 @@ class StrapiSubscriber {
 			async (data: BaseEntity & { value: Record<string, unknown> }) => {
 				const authInterace: AuthInterface =
 					(await this.getLoggedInUserStrapiCreds()) ?? this.strapiService_.getAuthInterface();
-				await this.strapiService_.createProductMetafieldInStrapi(data, authInterace);
+				await this.strapiService_.createProductMetafieldInStrapi(data.id, authInterace);
 			}
 		);
 		this.eventBus_.subscribe(

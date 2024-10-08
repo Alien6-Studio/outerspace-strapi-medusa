@@ -1,5 +1,5 @@
-import { BaseEntity } from '@medusajs/medusa';
-import { sleep } from '@medusajs/medusa/dist/utils/sleep';
+import { BaseEntity, EventBusService } from '@medusajs/medusa';
+import { Logger } from '@medusajs/medusa/dist/types/global';
 import axios, { AxiosResponse, Method, AxiosError } from 'axios';
 import cloneDeep from 'lodash/cloneDeep';
 import isArray from 'lodash/isArray';
@@ -7,12 +7,11 @@ import qs from 'qs';
 
 // Custom Imports
 import { LoggerHelper } from './loggerHelper';
+import { RedisHelper } from './redisHelper';
 import { StrapiServerManager, LoginTokenExpiredError } from './strapiServerManager';
 
 import { 
     StrapiSendParams, 
-    AuthInterface,
-    userCreds as UserCreds, 
     StrapiMedusaPluginOptions,
 } from '../../types/globals';
 
@@ -22,6 +21,7 @@ import {
 	StrapiEntity,
 	MedusaGetResult,
 } from '../types/types';
+import { log } from 'console';
 
 export interface StrapiQueryInterface {
 	fields: string[];
@@ -36,50 +36,90 @@ export interface StrapiQueryInterface {
 	locale?: string[];
 }
 
+export interface StrapiHelperInterface {
+	logger: Logger;
+	redisClient: any;
+	eventBusService: EventBusService;
+}
+
 /**
  * Strapi Helper class
  * 
  */
 export class StrapiHelper {
-    private strapi_url: string;
-    private token: string;
-	private options_: StrapiMedusaPluginOptions;
-	private strapiSuperAdminAuthToken: string;
+	private strapi_url: string;
+	private options: StrapiMedusaPluginOptions;
 
 	// Helpers
 	private loggerHelper: LoggerHelper;	
 	private strapiServerManager: StrapiServerManager;
+	private redisHelper: RedisHelper;
 
     /**
      * Default constructor
      * @param strapi_url
      * @param token
      */
-    constructor(logger: any, strapi_url: string, token: string, options: StrapiMedusaPluginOptions) {
-        this.strapi_url = strapi_url;
-        this.token = token;
-		this.strapiSuperAdminAuthToken = token;
-		this.options_ = options;
-		this.loggerHelper = new LoggerHelper(logger);
-		this.strapiServerManager = new StrapiServerManager(logger, strapi_url, token, options);
+    constructor(
+		props: StrapiHelperInterface,
+		token: string,
+		options: StrapiMedusaPluginOptions) {
+
+        // Set the technical fields
+		this.options = options;
+		let strapi_protocol = this.options.strapi_protocol ?? 'https';
+		let strapi_port = this.options.strapi_port ?? (strapi_protocol == 'https' ? undefined : 1337);
+		this.strapi_url =
+			`${strapi_protocol}://` +
+			`${this.options.strapi_host ?? 'localhost'}` +
+			`${strapi_port ? ':' + strapi_port : ''}`;
+
+		this.options = options;
+		this.loggerHelper = new LoggerHelper(props.logger);
+
+		this.redisHelper = new RedisHelper(props.eventBusService, props.redisClient);
+		this.strapiServerManager = new StrapiServerManager(props.logger, this.strapi_url, token, options);
     }
 
 	getServer(): StrapiServerManager {
 		return this.strapiServerManager;
 	}
 	
+	getRedisHelper() {
+		return this.redisHelper;
+	}
+
+	/**
+	 * Check if the type exists in Strapi
+	 */
+	async checkType(type, authInterface): Promise<boolean> {
+		let result: StrapiResult;
+		try {
+			result = result = await this.strapiSendDataLayer({
+				method: 'get',
+				type,
+				authInterface,
+			});
+		} catch (error) {
+			this.loggerHelper.log('error', `${type} type not found in strapi`);
+			result = undefined;
+		}
+		return result ? true : false;
+	}
+
     /**
      * Create a new entry in Strapi
      *
      */
     async createEntryInStrapi(command: StrapiSendParams): Promise<StrapiResult> {
         let result: StrapiGetResult;
-        try {
+		
+		try {
             /** to check if the request field already exists */
             result = await this.getEntriesInStrapi({
                 type: command.type,
                 method: 'get',
-                id: command.data.id,
+                id: command.id || command.data.id,
                 data: undefined,
                 authInterface: command.authInterface,
             });
@@ -93,7 +133,7 @@ export class StrapiHelper {
                 }
             }
         } catch (e) {
-            this.loggerHelper.log('info', e.message);
+            this.loggerHelper.log('error', e.message);
         }
 
         const createResponse = await this.processStrapiEntry({
@@ -126,24 +166,32 @@ export class StrapiHelper {
      */
     async updateEntryInStrapi(command: StrapiSendParams): Promise<StrapiResult> {
         try {
+			let id = command.id || command.data.id;
+			const ignore = await this.redisHelper.shouldIgnore(id, 'strapi');
+			
+			if (ignore) {
+				return { status: 400 };
+			}
+
+			// Does the entity exist in Strapi?
             const result = await this.getEntriesInStrapi({
                 type: command.type,
-                method: 'get',
-                id: command.data.id,
+                method: 'GET',
+                id: id,
                 data: undefined,
                 authInterface: command.authInterface,
                 query: command.query,
             });
-            this.loggerHelper.log('info', `LFE is here ${JSON.stringify(command)}`);
-
-            const putResult = await this.processStrapiEntry({
-                ...command,
-                method: 'put',
-                id: command.data.id,
-                query: undefined,
-            });
-            this.loggerHelper.log('info', `LFE is here ${JSON.stringify(putResult)}`);
-            return putResult;
+            // If it does, update it
+			if (result) {
+				const putResult = await this.processStrapiEntry({
+					...command,
+					method: 'PUT',
+					id: id,
+					query: undefined,
+				});
+				return putResult;
+			}
         } catch (e) {
             this.loggerHelper.log(
                 'error',
@@ -157,7 +205,14 @@ export class StrapiHelper {
      *
      */
     async deleteEntryInStrapi(command: StrapiSendParams): Promise<StrapiResult> {
-        return await this.processStrapiEntry({
+		
+		let id = command.id || command.data.id;
+		const ignore = await this.redisHelper.shouldIgnore(id, 'strapi');
+		
+		if (ignore) {
+			return { status: 400 };
+		}
+		return await this.processStrapiEntry({
             ...command,
             method: 'delete',
         });
@@ -266,30 +321,28 @@ export class StrapiHelper {
 		data?: any;
 		query?: string;
 	}): Promise<AxiosResponse> {
+
 		let endPoint: string = undefined;
+		let tail = '';
+
 		await this.strapiServerManager.waitForHealth();
 		await this.strapiServerManager.waitForServiceAccountCreation();
-		let tail = '';
-		
-		//	if (method.toLowerCase() != 'post') {
+
+		// If the method is not POST, we need to append the id to the endpoint
 		if (method.toLowerCase() != 'post') {
-			if (
-				id &&
-				id != '' &&
-				id?.trim().toLocaleLowerCase() != 'me' &&
-				type.toLowerCase() != 'users' &&
-				method.toLowerCase() == 'get'
-			) {
-				tail = `?${this.appendIdToStrapiFilter(query, id)}`;
-			} else {
-				tail = id ? `/${id}` : '';
-			}
+			// GET
+			if ( id && id != '' && id?.trim().toLocaleLowerCase() != 'me' &&
+				type.toLowerCase() != 'users' && method.toLowerCase() == 'get'
+			) {  
+				tail = `?${this.appendIdToStrapiFilter(query, id)}`; 
+			} else { // PUT or DELETE
+				tail = id ? `/${id}` : ''; }
 			if (tail == '' && query) tail = `?${query}`;
 		}
-		//	}
 
+		// Construct the endpoint
 		endPoint = `${this.strapi_url}/api/outerspace-strapi-plugin-medusa/${type}${tail}`;
-		this.loggerHelper.log('info', `User endpoint: ${endPoint}`);
+
 		const basicConfig = {
 			method: method,
 			url: endPoint,
@@ -297,21 +350,14 @@ export class StrapiHelper {
 				Authorization: `Bearer ${token}`,
 			},
 		};
-		this.loggerHelper.log('info', `${basicConfig.method} ${basicConfig.url}`);
+
 		const config = data
-			? {
-					...basicConfig,
-					data,
-			  }
-			: {
-					...basicConfig,
-			  };
+			? { ...basicConfig, data }
+			: { ...basicConfig };
 
 		try {
-			this.loggerHelper.log('debug', `User Endpoint firing: ${endPoint} method: ${method} query:${query}`);
+			// Call the endpoint with the config
 			const result = await axios(config);
-			this.loggerHelper.log('debug', `User Endpoint fired: ${endPoint} method : ${method} query:${query}`);
-			// console.log("attempting action:"+result);
 			if (result.status >= 200 && result.status < 300) {
 				this.loggerHelper.log(
 					'debug',
@@ -319,9 +365,13 @@ export class StrapiHelper {
 						` data:${JSON.stringify(data)}, :status:${result.status} query:${query}`
 				);
 			}
-
 			return result;
 		} catch (error) {
+			this.loggerHelper.log(
+				'error',
+				`Strapi Error : method: ${method}, id:${id}, type:${type},` +
+					` data:${JSON.stringify(data)}, :status:${error.response.status} query:${query}`
+			);
 			this.strapiServerManager.axiosError(error, id, type, data, method, endPoint);
 		}
 	}

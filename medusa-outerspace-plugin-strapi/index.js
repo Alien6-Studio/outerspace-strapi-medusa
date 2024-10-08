@@ -6,6 +6,9 @@ const loaders = require("@medusajs/medusa/dist/loaders/index").default
 ;(async() => {
   async function start() {
     const app = express()
+    // javasript:S5689
+    // We hide internal technical information to prevent attackers from learning about our stack
+    app.disable("x-powered-by");
     const directory = process.cwd()
 
     try {

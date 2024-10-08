@@ -1,6 +1,5 @@
-import axios, { AxiosResponse, Method, AxiosError } from 'axios';
+import axios from 'axios';
 import axiosRetry from 'axios-retry';
-
 
 let strapiRetryDelay: number;
 
