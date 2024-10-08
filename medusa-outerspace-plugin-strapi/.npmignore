@@ -3,3 +3,8 @@
 **/node_modules/*
 **/dist/*
 .git
+.vscode
+.cache
+.github
+data
+dist
