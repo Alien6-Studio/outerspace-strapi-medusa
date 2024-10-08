@@ -197,14 +197,26 @@ export async function createNestedEntity(uid, strapi, dataReceived) {
             for (const element of dataReceived[key]) {
                 // Derive the uid from the key
                 const nestedUid = findContentUid(key, strapi);
-                // Create or update the nested entity then replace it with its ID
-                const nestedEntityId = await findOrCreateEntity(nestedUid, strapi, element, uniqueField);
-                if (nestedEntityId) {
-                    entityIds.push(nestedEntityId);
+                if (nestedUid) {
+                    // Create or update the nested entity then replace it with its ID
+                    const nestedEntityId = await findOrCreateEntity(nestedUid, strapi, element, uniqueField);
+                    if (nestedEntityId) {
+                        entityIds.push(nestedEntityId);
+                    }
                 }
             }
             dataReceived[key] = entityIds;
-        } 
+        } else if (typeof dataReceived[key] === 'object' && dataReceived[key] !== null) {
+            // Handle singular nested objects
+            const nestedUid = findContentUid(key, strapi);
+            if (nestedUid) {
+                // Create or update the singular nested entity then replace it with its ID
+                const nestedEntityId = await findOrCreateEntity(nestedUid, strapi, dataReceived[key], uniqueField);
+                if (nestedEntityId) {
+                    dataReceived[key] = nestedEntityId;
+                }
+            }
+        }
     }
 
     // Create or update the main entity in Strapi

@@ -159,22 +159,14 @@ async function controllerUpdate(ctx, strapi, uid) {
 	delete ctx.request.body?.data?.id;
 	const data = ctx.request.body.data || ctx.request.body;
 
-	strapi.log.info(`Medusa is updating entity ${medusa_id} of type ${uid} in Strapi`, { data: data });
-
 	try {
 		const entityId = await getStrapiIdFromMedusaId(uid, strapi, medusa_id);
-
 		if (entityId) {
-			strapi.log.debug('converting to strapi data - time: ' + Date.now());
 			const processedData = await createNestedEntity(uid, strapi, data);
-			strapi.log.debug('converted to strapi data - time: ' + Date.now());
 			delete processedData.medusa_id;
-			strapi.log.debug('updating strapi data ' + uid + ' - time: ' + Date.now());
-			
 			let result = await strapi.services[uid].update(entityId, {
 				data: { ...processedData, updateFrom: 'medusa' },
 			});
-			strapi.log.debug('updated updated strapi data ' + uid + ' - time: ' + Date.now());
 			ctx.body = { data: result };
 			return (ctx.body);
 		} else {
