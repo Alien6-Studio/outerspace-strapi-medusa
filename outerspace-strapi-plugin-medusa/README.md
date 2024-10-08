@@ -7,3 +7,19 @@ This plugin pulls data from Medusa into Strapi, where the data can be enriched. 
 - Allows users to manage multilingual content (i18n) for Medusa products.
 - Supports handling of images and product media, leveraging Strapi's robust media capabilities.
 - Adds custom fields and attributes to Medusa objects within Strapi for enhanced product sheets.
+
+# Roadmap
+
+- [ ] Add support for Strapi v5
+- [ ] Add support for Medusa v2
+
+# Credentials
+
+This repository has been orignally forked from [SGFGOV](https://github.com/SGFGOV/medusa-strapi-repo.git) and modified to fit the needs of Outerspace.
+Many thanks to the original authors for their work.
+
+👤 **Govind Diwakar**
+
+* Website: linkedin.com/in/govindd
+* Github: [@SGFGOV](https://github.com/SGFGOV)
+* LinkedIn: [@govindd](https://linkedin.com/in/govindd)

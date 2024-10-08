@@ -1,7 +1,6 @@
 .DS_Store
 .trunk
 **/node_modules/*
-**/dist/*
 .git
 .vscode
 .cache
