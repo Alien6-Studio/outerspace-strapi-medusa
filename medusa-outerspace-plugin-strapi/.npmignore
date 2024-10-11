@@ -1,0 +1,10 @@
+.DS_Store
+.trunk
+**/node_modules/*
+.git
+.vscode
+.cache
+.github
+data
+dist
+build

@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/currencies",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.currency.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/currencies/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.currency.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/currencies",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.currency.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/currencies/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.currency.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/currencies/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.currency.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

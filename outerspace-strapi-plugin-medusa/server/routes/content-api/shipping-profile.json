@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/shipping-profiles",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-profile.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/shipping-profiles/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-profile.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/shipping-profiles",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-profile.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/shipping-profiles/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-profile.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/shipping-profiles/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.shipping-profile.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

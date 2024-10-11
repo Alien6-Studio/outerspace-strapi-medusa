@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "shipping_option_requirements",
+  "info": {
+    "singularName": "shipping-option-requirement",
+    "pluralName": "shipping-option-requirements",
+    "displayName": "Shipping Option Requirement",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "versions": {
+      "versioned": true
+    },
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "medusa_id": {
+      "type": "uid"
+    },
+    "requirement_type": {
+      "type": "enumeration",
+      "enum": [
+        "min_subtotal",
+        "max_subtotal"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "amount": {
+      "type": "decimal",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "shipping_options": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      },
+      "mappedBy": "shipping_option_requirements"
+    }
+  }
+}

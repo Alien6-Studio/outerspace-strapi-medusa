@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/iso-countries",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.iso-country.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/iso-countries/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.iso-country.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/iso-countries",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.iso-country.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/iso-countries/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.iso-country.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/iso-countries/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.iso-country.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

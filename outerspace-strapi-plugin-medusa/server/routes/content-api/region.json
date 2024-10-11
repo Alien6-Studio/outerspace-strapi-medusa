@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/regions",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.region.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/regions/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.region.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/regions",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.region.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/regions/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.region.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/regions/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.region.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

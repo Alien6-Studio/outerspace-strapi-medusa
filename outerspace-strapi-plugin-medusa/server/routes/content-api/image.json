@@ -1,0 +1,44 @@
+{
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/images",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.image.find",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/images/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.image.findOne",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/images",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.image.create",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/images/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.image.update",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/images/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.image.delete",
+      "config": {
+        "policies": []
+      }
+    }
+  ]
+}

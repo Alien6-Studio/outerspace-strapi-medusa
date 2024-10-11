@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/product-legals",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-legal.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/product-legals/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-legal.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/product-legals",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-legal.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/product-legals/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-legal.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/product-legals/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.product-legal.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

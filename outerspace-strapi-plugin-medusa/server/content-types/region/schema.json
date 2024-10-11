@@ -1,0 +1,121 @@
+{
+  "kind": "collectionType",
+  "collectionName": "regions",
+  "info": {
+    "singularName": "region",
+    "pluralName": "regions",
+    "displayName": "Region",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "versions": {
+      "versioned": true
+    },
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "medusa_id": {
+      "type": "uid"
+    },
+    "name": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        },
+        "translate": {
+          "translate": "translate"
+        }
+      }
+    },
+    "tax_rate": {
+      "type": "decimal",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "tax_code": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        },
+        "translate": {
+          "translate": "translate"
+        }
+      }
+    },
+    "metadata": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "countries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "plugin::outerspace-strapi-plugin-medusa.iso-country",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      },
+      "mappedBy": "region"
+    },
+    "fulfillment_providers": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::outerspace-strapi-plugin-medusa.fulfillment-provider",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      },
+      "inversedBy": "regions"
+    },
+    "payment_provider": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::outerspace-strapi-plugin-medusa.payment-provider",
+      "inversedBy": "regions",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      }
+    },
+    "currency": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::outerspace-strapi-plugin-medusa.currency",
+      "inversedBy": "regions",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      }
+    },
+    "shipping_options": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      },
+      "mappedBy": "regions"
+    } 
+  } 
+}

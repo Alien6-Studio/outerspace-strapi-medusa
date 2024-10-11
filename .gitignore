@@ -1,0 +1,10 @@
+.DS_Store
+.trunk
+.github
+.vscode
+
+# Node.js
+**/node_modules/*
+**/dist/*
+**/public/*
+**/data/*

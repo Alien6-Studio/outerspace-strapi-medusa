@@ -1,0 +1,44 @@
+{
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/payment-providers",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.payment-provider.find",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/payment-providers/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.payment-provider.findOne",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/payment-providers",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.payment-provider.create",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/payment-providers/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.payment-provider.update",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/payment-providers/:id",
+      "handler": "plugin::outerspace-strapi-plugin-medusa.payment-provider.delete",
+      "config": {
+        "policies": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "product_options",
+  "info": {
+    "singularName": "product-option",
+    "pluralName": "product-options",
+    "displayName": "Product Option",
+    "description": ""
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": true,
+    "comment": ""
+  },
+"pluginOptions": {
+    "versions": {
+      "versioned": false
+    },
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "medusa_id": {
+      "type": "uid"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "metadata": {
+      "type": "json"
+    },
+    "product": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product",
+      "inversedBy": "product_options"
+    },
+    "product_option_values": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::outerspace-strapi-plugin-medusa.product-option-value",
+      "inversedBy": "product_option"
+    }
+  }
+}
