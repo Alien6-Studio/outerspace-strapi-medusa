@@ -4,7 +4,7 @@
   "info": {
     "singularName": "fulfillment-provider",
     "pluralName": "fulfillment-providers",
-    "displayName": "Fulfillment Provider",
+    "displayName": "M | Fulfillment Provider",
     "description": ""
   },
   "options": {
@@ -21,8 +21,7 @@
   "attributes": {
     "medusa_id": {
       "type": "string",
-      "required": true,
-      "unique": true
+      "required": true
     },
     "is_installed": {
       "type": "boolean",

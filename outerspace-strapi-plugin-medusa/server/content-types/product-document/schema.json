@@ -4,7 +4,7 @@
   "info": {
     "singularName": "product-document",
     "pluralName": "product-documents",
-    "displayName": "Product Document",
+    "displayName": "M | Product Document",
     "description": "Used to store product related Document files"
   },
   "options": {
