@@ -1,0 +1,45 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/stores",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.store.find",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/stores/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.store.findOne",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/stores",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.store.create",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/stores/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.store.update",
+        "config": {
+          "policies": []
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/stores/:id",
+        "handler": "plugin::outerspace-strapi-plugin-medusa.store.delete",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

@@ -1,0 +1,60 @@
+{
+  "kind": "collectionType",
+  "collectionName": "fulfillment_providers",
+  "info": {
+    "singularName": "fulfillment-provider",
+    "pluralName": "fulfillment-providers",
+    "displayName": "Fulfillment Provider",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "versions": {
+      "versioned": true
+    },
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "medusa_id": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "is_installed": {
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "regions": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::outerspace-strapi-plugin-medusa.region",
+      "mappedBy": "fulfillment_providers",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      }
+    },
+    "shipping_options": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option",
+      "mappedBy": "fulfillment_providers",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      }
+    }
+  }
+}

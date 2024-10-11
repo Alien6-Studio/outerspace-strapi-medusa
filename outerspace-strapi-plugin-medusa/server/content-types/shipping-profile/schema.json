@@ -1,0 +1,71 @@
+{
+  "kind": "collectionType",
+  "collectionName": "shipping_profiles",
+  "info": {
+    "singularName": "shipping-profile",
+    "pluralName": "shipping-profiles",
+    "displayName": "Shipping Profile",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "versions": {
+      "versioned": true
+    },
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "medusa_id": {
+      "type": "uid"
+    },
+    "name": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        },
+        "translate": {
+          "translate": "translate"
+        }
+      }
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "default",
+        "gift_card",
+        "custom"
+      ],
+      "required": true,
+      "default": "default",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "metadata": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "shipping_options": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::outerspace-strapi-plugin-medusa.shipping-option",
+      "pluginOptions": {
+        "translate": {
+          "translate": "translate"
+        }
+      },
+      "mappedBy": "shipping_profiles"
+    }
+  }
+}
