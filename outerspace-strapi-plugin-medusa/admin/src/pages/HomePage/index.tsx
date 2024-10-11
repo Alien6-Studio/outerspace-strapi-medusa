@@ -98,7 +98,7 @@ const HomePage: React.FC = () => {
       <ContentLayout>
         <Box padding={4}>
           <Banner visible />
-          <Box margin={4} padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="#FFF">
+          <Box margin={4} padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
             <Typography variant="beta">Medusa Server Configuration</Typography>
             <Box padding={2}>
               <TextInput
@@ -137,7 +137,7 @@ const HomePage: React.FC = () => {
         </Box>
 
         <Box padding={4}>
-          <Box padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="#FFF">
+          <Box padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
             <Typography variant="beta">Sync User Configuration</Typography>
             <Box padding={2}>
               <TextInput
@@ -168,7 +168,7 @@ const HomePage: React.FC = () => {
         </Box>
 
         <Box padding={4}>
-          <Box padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="#FFF">
+          <Box padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
             <Typography variant="beta">Medusa Superuser Configuration</Typography>
             <Box padding={2}>
               <TextInput

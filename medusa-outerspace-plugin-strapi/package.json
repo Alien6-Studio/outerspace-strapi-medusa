@@ -1,6 +1,6 @@
 {
   "name": "medusa-outerspace-plugin-strapi",
-  "version": "1.0.0-beta.6",
+  "version": "1.0.0-beta.7",
   "description": "This plugin pushes data from Medusa to Strapi, where the data can be enriched.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
