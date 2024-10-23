@@ -23,7 +23,8 @@
   },
   "attributes": {
     "medusa_id": {
-      "type": "uid"
+      "type": "string",
+      "required": true
     },
     "is_installed": {
       "type": "boolean",

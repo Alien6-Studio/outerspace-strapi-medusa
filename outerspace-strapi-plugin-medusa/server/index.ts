@@ -21,3 +21,5 @@ export default {
   policies,
   middlewares,
 };
+
+export { overrideContentManagerForMedusa } from './extensions/content-manager/strapi-server';

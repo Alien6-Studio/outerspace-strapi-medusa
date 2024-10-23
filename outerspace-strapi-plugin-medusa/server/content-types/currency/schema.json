@@ -5,7 +5,7 @@
     "singularName": "currency",
     "pluralName": "currencies",
     "displayName": "M | Currency",
-    "description": ""
+    "description": "Currency used in the store"
   },
   "options": {
     "draftAndPublish": true
@@ -27,27 +27,11 @@
     },
     "symbol": {
       "type": "string",
-      "required": true,
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        },
-        "translate": {
-          "translate": "translate"
-        }
-      }
+      "required": true
     },
     "symbol_native": {
       "type": "string",
-      "required": true,
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        },
-        "translate": {
-          "translate": "translate"
-        }
-      }
+      "required": true
     },
     "name": {
       "type": "string",

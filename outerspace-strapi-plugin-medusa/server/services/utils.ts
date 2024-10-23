@@ -125,6 +125,16 @@ async function findOrCreateEntity(uid, strapi, dataReceived, uniqueField) {
     let strapiId = null;
     let uniqueIdentifier = dataReceived[uniqueField];
 
+    // If the unique identifier is not found, return
+    if (!uniqueIdentifier) {
+        return strapiId;
+    }
+
+    // Set locale to default if not provided
+    if (!dataReceived.locale) {
+        dataReceived.locale = 'en';
+    }
+
     // Convert unique identifier to string if it's not already a string
     if (typeof uniqueIdentifier !== 'string') {
         uniqueIdentifier = String(uniqueIdentifier);
@@ -133,21 +143,30 @@ async function findOrCreateEntity(uid, strapi, dataReceived, uniqueField) {
 
     if (uniqueIdentifier) {
         try {
-            // Check if entity already exists
+            // Check if entity already exists for the same locale
             const foundEntities = await strapi.entityService.findMany(uid, {
-                filters: { [uniqueField]: uniqueIdentifier }
+                filters: { 
+                    [uniqueField]: uniqueIdentifier,
+                    locale: dataReceived.locale
+                 }
             });
 
             if (foundEntities.length > 0) {
                 strapi.log.info(`Found existing entity for ${uid} with ${uniqueField} ${uniqueIdentifier}`);
                 strapiId = foundEntities[0].id;
 
-                // Only update if necessary to avoid redundant updates
-                await strapi.entityService.update(uid, strapiId, {
-                    data: dataReceived  // Use the strapiId directly to update the entity
-                });
-            } else {
+                if (dataReceived.id) {
+                    await strapi.entityService.update(uid, strapiId, {
+                        data: dataReceived  // Use the strapiId directly to update the entity
+                    });
+                } else {
+                    // This must not happen, this is related to the creation of an entity with the same medusa_id in the same locale
+                    throw new Error(`Entity with ${uniqueField} ${uniqueIdentifier} already exists for ${uid} in locale ${dataReceived.locale}`);
+                }
 
+            } else {
+                strapi.log.info(`No existing entity for ${uid} with ${uniqueField} ${uniqueIdentifier} has been found for the same locale`);
+                delete dataReceived.id; // Remove the id if it exists
                 // Remove ManyToOne relations for the initial creation
                 for (const key in dataReceived) {
                     if (key.endsWith('_id')) {
@@ -177,7 +196,6 @@ async function findOrCreateEntity(uid, strapi, dataReceived, uniqueField) {
     } else {
         strapi.log.warn(`Unique identifier not found in data for ${uid}`);
     }
-
     return strapiId;
 }
 
@@ -230,11 +248,10 @@ export async function createNestedEntity(uid, strapi, dataReceived) {
     try {
         await findOrCreateEntity(uid, strapi, dataReceived, uniqueField);
 
-    } catch (e) {
+    } catch (e: any) {
         strapi.log.error(`Error creating or attaching Strapi ID or unique entity: ${e.message}`);
         throw e;
     }
-
     return dataReceived;
 }
 

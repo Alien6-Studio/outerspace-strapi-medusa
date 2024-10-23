@@ -20,44 +20,24 @@
   },
   "attributes": {
     "medusa_id": {
-      "type": "uid"
+      "type": "string",
+      "required": true
     },
     "iso_2": {
       "type": "string",
       "required": true,
       "maxLength": 2,
-      "minLength": 2,
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        },
-        "translate": {
-          "translate": "translate"
-        }
-      }
+      "minLength": 2
     },
     "iso_3": {
       "type": "string",
       "required": true,
       "maxLength": 3,
-      "minLength": 3,
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        },
-        "translate": {
-          "translate": "translate"
-        }
-      }
+      "minLength": 3
     },
     "num_code": {
       "type": "integer",
-      "required": true,
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
+      "required": true
     },
     "name": {
       "type": "string",

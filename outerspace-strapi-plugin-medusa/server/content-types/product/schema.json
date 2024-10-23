@@ -20,7 +20,8 @@
   },
   "attributes": {
     "medusa_id": {
-      "type": "uid"
+      "type": "string",
+      "required": true
     },
     "title": {
       "type": "text",
@@ -338,6 +339,6 @@
         }
       },
       "mappedBy": "product"
-    },
+    }
   }
 }
