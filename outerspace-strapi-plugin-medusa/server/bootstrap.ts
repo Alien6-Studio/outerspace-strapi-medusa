@@ -1,16 +1,16 @@
 import { Strapi } from '@strapi/strapi';
-import { config, createMedusaRole, verifyOrCreateMedusaUser }  from './services/setup-service';
+import { config, createMedusaRole, verifyOrCreateMedusaUser } from './services/setup-service';
 
 const chalk = require('chalk');
 
 export default async ({ strapi }: { strapi: Strapi }) => {
 
-  /**
-   * Create a super admin user
-   * This method is called when the plugin is loaded
-   * (Not tested)
-   */
-  async function createSuperAdmin() {
+	/**
+	 * Create a super admin user
+	 * This method is called when the plugin is loaded
+	 * (Not tested)
+	 */
+	async function createSuperAdmin() {
 		try {
 			const params = {
 				username: process.env.SUPERUSER_USERNAME,
@@ -22,7 +22,7 @@ export default async ({ strapi }: { strapi: Strapi }) => {
 				isActive: true,
 			};
 
-      console.log(chalk.bold('outerspace-strapi-plugin-medusa bootstrap started'));
+			console.log(chalk.bold('outerspace-strapi-plugin-medusa bootstrap started'));
 			const hasAdmin = await strapi.service('admin::user').exists();
 
 			if (hasAdmin) {
@@ -57,43 +57,42 @@ export default async ({ strapi }: { strapi: Strapi }) => {
 		} catch (error) {
 			console.log(error);
 		}
-  }
+	}
 
-  /**
-   * Update the public permissions
-   */
-  async function setPublicPermissions(newPermissions: Record<string, string[]>) {
+	/**
+	 * Update the public permissions
+	 */
+	async function setPublicPermissions(newPermissions: Record<string, string[]>) {
 
-	const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
-		where: {
-			type: 'public',
-		},
-	});
-
-	const allPermissionsToCreate: Promise<any>[] = [];
-	Object.keys(newPermissions).map((controller) => {
-		const actions = newPermissions[controller];
-		const permissionsToCreate = actions.map((action) => {
-			// eslint-disable-next-line no-undef
-			return strapi.query('plugin::users-permissions.permission').create({
-				data: {
-					action: `plugin::outerspace-strapi-plugin-medusa.${controller}.${action}`,
-					role: publicRole.id,
-				},
-			});
+		const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
+			where: {
+				type: 'public',
+			},
 		});
-		allPermissionsToCreate.push(...permissionsToCreate);
-	});
-	await Promise.all(allPermissionsToCreate);
-  }
 
-  // Register the plugin
-  config(strapi);
+		const allPermissionsToCreate: Promise<any>[] = [];
+		Object.keys(newPermissions).map((controller) => {
+			const actions = newPermissions[controller];
+			const permissionsToCreate = actions.map((action) => {
+				// eslint-disable-next-line no-undef
+				return strapi.query('plugin::users-permissions.permission').create({
+					data: {
+						action: `plugin::outerspace-strapi-plugin-medusa.${controller}.${action}`,
+						role: publicRole.id,
+					},
+				});
+			});
+			allPermissionsToCreate.push(...permissionsToCreate);
+		});
+		await Promise.all(allPermissionsToCreate);
+	}
 
-  await createSuperAdmin();
+	// Register the plugin
+	config(strapi);
+	await createSuperAdmin();
 
-  // Set public permissions
-  await setPublicPermissions({
+	// Set public permissions
+	await setPublicPermissions({
 		'product': ['find', 'findOne'],
 		'product-type': ['find', 'findOne'],
 		'product-tag': ['find', 'findOne'],
@@ -106,3 +105,5 @@ export default async ({ strapi }: { strapi: Strapi }) => {
 	// Create the medusa role
 	await createMedusaRole(strapi);
 };
+
+

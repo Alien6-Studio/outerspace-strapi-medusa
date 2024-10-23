@@ -22,19 +22,12 @@
     }
   },
   "attributes": {
+    "medusa_id": {
+      "type": "string",
+      "required": true
+    },
     "terms_and_conditions": {
       "type": "richtext",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        },
-        "translate": {
-          "translate": "translate"
-        }
-      }
-    },
-    "medusa_id": {
-      "type": "uid",
       "pluginOptions": {
         "i18n": {
           "localized": true

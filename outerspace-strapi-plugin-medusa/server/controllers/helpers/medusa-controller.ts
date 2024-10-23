@@ -1,35 +1,52 @@
+'use strict';
+
+import { Strapi } from '@strapi/strapi';
 import { factories } from '@strapi/strapi';
 import { createNestedEntity } from '../../services/utils';
-import _ from 'lodash';
+import { cloneDeep } from 'lodash';
+
+import { 
+	getFieldsWithoutRelationsAndMedia,
+	getStrapiDataByMedusaId,
+	handleError, 
+	IControllerProps, 
+	IError } from './utils';
 
 /**
  * Overwrite the default controller for Medusa
- * 
  */
-export function createMedusaDefaultController(uid) {
-	return factories.createCoreController(uid, {
+export function createMedusaDefaultController(uid: any) {
+	return factories.createCoreController(uid, () => ({
 		async find(ctx) {
-			return await controllerfindMany(ctx, strapi, uid);
+			const props: IControllerProps = { ctx, strapi, uid };
+			return await controllerfindMany(props);
 		},
 		async findOne(ctx) {
-			return await controllerfindOne(ctx, strapi, uid);
+			const props: IControllerProps = { ctx, strapi, uid };
+			return await controllerfindOne(props);
 		},
 		async delete(ctx) {
-			return await controllerDelete(ctx, strapi, uid);
+			const props: IControllerProps = { ctx, strapi, uid };
+			return await controllerDelete(props);
 		},
 		async create(ctx) {
-			return await controllerCreate(ctx, strapi, uid);
+			const props: IControllerProps = { ctx, strapi, uid };
+			return await controllerCreate(props);
 		},
 		async update(ctx) {
-			return await controllerUpdate(ctx, strapi, uid);
+			const props: IControllerProps = { ctx, strapi, uid };
+			return await controllerUpdate(props);
 		},
-	});
+	}));
 }
 
 /**
  * Overwrite the findMany method for Medusa
  */
-async function controllerfindMany(ctx, strapi, uid) {
+export async function controllerfindMany(props: IControllerProps) {
+
+	let { ctx, strapi, uid } = props;
+
 	try {
 		if (!ctx.query.fields?.includes('medusa_id')) {
 			const fields = ctx.query.fields ? ctx.query.fields.push('medusa_id') : ['*'];
@@ -62,15 +79,19 @@ async function controllerfindMany(ctx, strapi, uid) {
 				...ctx.query.pagination,
 			};
 		}
+
 		const entity = await strapi.entityService.findPage(uid, ctx.query);
 		strapi.log.debug(`requested  ${uid} query: ${JSON.stringify(ctx.query)}`);
+
 		if (entity && entity.results.length > 0) {
 			ctx.body = { data: entity.results, meta: entity.pagination };
 			return (ctx.body);
 		}
+		
 		return ctx.notFound(ctx);
+
 	} catch (e) {
-		handleError(strapi, e);
+		handleError(strapi, e as IError);
 		return ctx.internalServerError(ctx);
 	}
 }
@@ -78,14 +99,19 @@ async function controllerfindMany(ctx, strapi, uid) {
 /**
  * Overwrite the findOne method for Medusa
  */
-async function controllerfindOne(ctx, strapi, uid) {
+export async function controllerfindOne(props: IControllerProps) {
+
+	let { ctx, strapi, uid } = props;
+	strapi.log.debug(`requested  ${uid} query: ${JSON.stringify(ctx.query)}`);
+
 	const { id: medusa_id } = ctx.params;
 	const apiName = uid.split('.')[1];
-	const model = strapi.api[apiName].contentTypes;
-	const fields = getFieldsWithoutRelationsAndMedia(model[apiName].attributes);
-	strapi.log.debug(`requested ${uid} ${medusa_id}`);
+	const models = strapi.plugins['outerspace-strapi-plugin-medusa'].contentTypes;
+	const fields = getFieldsWithoutRelationsAndMedia(models[apiName].attributes);
+	const locale = 'en'; // as default value
+
 	try {
-		const entity = await getStrapiDataByMedusaId(uid, strapi, medusa_id, fields);
+		const entity = await getStrapiDataByMedusaId(uid, strapi, medusa_id, fields, locale);
 
 		if (entity && entity.id) {
 			ctx.body = { data: entity };
@@ -93,7 +119,7 @@ async function controllerfindOne(ctx, strapi, uid) {
 		}
 		return ctx.notFound(ctx);
 	} catch (e) {
-		handleError(strapi, e);
+		handleError(strapi, e as IError);
 		return ctx.internalServerError(ctx);
 	}
 }
@@ -101,20 +127,37 @@ async function controllerfindOne(ctx, strapi, uid) {
 /**
  * Overwrite the delete method for Medusa
  */
-async function controllerDelete(ctx, strapi, uid) {
+export async function controllerDelete(props: IControllerProps) {
+
+	let { ctx, strapi, uid } = props;
 	const { id: medusa_id } = ctx.params;
+
+	let id;
+	let result;
+
 	try {
-		const entityId = await getStrapiIdFromMedusaId(uid, strapi, medusa_id);
-		if (!entityId) {
+		// for each locale, delete the entity
+		for (const locale of ['en', 'fr']) {
+			console.log(`Deleting ${uid} with medusa_id ${medusa_id} and locale ${locale}`);
+			const entity = await getStrapiDataByMedusaId(uid, strapi, medusa_id, ['medusa_id', 'id'], locale);
+			const entityId = entity?.id
+
+			if (entityId) {
+				id = entityId;
+				result = await strapi.services[uid].delete(entityId, { populate: '*' });
+			}
+		}
+
+		if (!id) {
 			return ctx.notFound(ctx);
 		}
-		const result = await strapi.services[uid].delete(entityId, { populate: '*' });
 		if (result) {
 			ctx.body = { deletedData: result };
 			return (ctx.body);
 		}
+
 	} catch (e) {
-		handleError(strapi, e);
+		handleError(strapi, e as IError);
 		return ctx.internalServerError(ctx);
 	}
 }
@@ -122,31 +165,35 @@ async function controllerDelete(ctx, strapi, uid) {
 /**
  * Overwrite the create method for Medusa
  */
-async function controllerCreate(ctx, strapi, uid) {
-	delete ctx.request.body?.data?.id;
-	let processedData;
+export async function controllerCreate(props: IControllerProps) {
 
-	let data = _.cloneDeep(ctx.request.body.data ?? ctx.request.body);
+	let { ctx, strapi, uid } = props;
+	let processedData;
+	let data = cloneDeep(ctx.request.body.data ?? ctx.request.body);
+
 	strapi.log.info(`Medusa is creating entity ${uid} on Strapi`, { data: data });
+
 	try {
 		if (typeof data == 'string') {
 			data = JSON.parse(data);
 		}
 		let files;
 		if (ctx.request.files) {
-			files = _.cloneDeep(ctx.request.files);
+			files = cloneDeep(ctx.request.files);
 			delete data.files;
 		}
 		processedData = await createNestedEntity(uid, strapi, data);
+
 		if (processedData && files) {
 			processedData = await uploadFile(strapi, uid, files, processedData);
 		}
 
-		strapi.log.info(`created element ${uid} ${JSON.stringify(processedData)}`);
 		ctx.body = { data: processedData };
+
 		return (ctx.body);
+
 	} catch (e) {
-		handleError(strapi, e);
+		handleError(strapi, e as IError);
 		return ctx.internalServerError(ctx);
 	}
 }
@@ -154,13 +201,18 @@ async function controllerCreate(ctx, strapi, uid) {
 /**
  * Overwrite the update method for Medusa
  */
-async function controllerUpdate(ctx, strapi, uid) {
+async function controllerUpdate(props: IControllerProps) {
+
+	let { ctx, strapi, uid } = props;
 	const { id: medusa_id } = ctx.params;
 	delete ctx.request.body?.data?.id;
 	const data = ctx.request.body.data || ctx.request.body;
+	const locale = 'en';
 
 	try {
-		const entityId = await getStrapiIdFromMedusaId(uid, strapi, medusa_id);
+		const entity= await getStrapiDataByMedusaId(uid, strapi, medusa_id, ['medusa_id', 'id'], locale);
+		const entityId = entity?.id
+
 		if (entityId) {
 			const processedData = await createNestedEntity(uid, strapi, data);
 			delete processedData.medusa_id;
@@ -174,47 +226,15 @@ async function controllerUpdate(ctx, strapi, uid) {
 			return ctx.notFound(ctx);
 		}
 	} catch (e) {
-		handleError(strapi, e);
+		handleError(strapi, e as IError);
 		return ctx.internalServerError(ctx);
 	}
 }
 
-// Utils
-function handleError(strapi, e) {
-	const details = JSON.stringify(e.details);
-	strapi.log.error(`Error Occurred ${e.name} ${e.message}`);
-	strapi.log.error(`Error Details ${details}`);
-	strapi.log.error(`stack trace ${e.stack}`);
-}
-
-async function getStrapiIdFromMedusaId(uid, strapi, medusa_id) {
-	return (await getStrapiDataByMedusaId(uid, strapi, medusa_id, ['medusa_id', 'id']))?.id;
-}
-
-async function getStrapiDataByMedusaId(uid, strapi, medusa_id, fields) {
-	const filters = {
-		medusa_id: medusa_id,
-	};
-	let entity;
-    
-	try {
-        const entities = await strapi.entityService.findMany(uid, {
-            fields,
-            filters,
-        });
-        return entities?.[0];
-	} catch (e) {
-		strapi.log.debug(`${JSON.stringify(filters)} (entity doesn't exist)`);
-	}
-}
-
-function getFieldsWithoutRelationsAndMedia(attributes) {
-	const keys = Object.keys(attributes);
-	const fields = keys.filter((k) => !(attributes[k].relation || attributes[k].type == 'media'));
-	return fields;
-}
-
-async function uploadFile(strapi, uid, fileData, processedData, fieldName = 'files') {
+/**
+ * Upload file to entity
+ */
+async function uploadFile(strapi: any, uid: any, fileData: any, processedData: any, fieldName = 'files') {
 	const service = strapi.service('plugin::upload.upload');
 	const id = processedData.id;
 	const field = fieldName;

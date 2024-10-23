@@ -6,15 +6,11 @@
     "strict": true
   },
 
-  "include": ["admin", "custom.d.ts"],
+  "include": ["admin", "custom.d.ts", "./server/**/*.ts", "server/controllers/helpers/index.js", "server/extensions/content-manager"],
 
   "exclude": [
     "node_modules/",
     "dist/",
-
-    // Do not include server files in the server compilation
-    "server/",
-    // Do not include test files
     "**/*.test.ts"
   ]
 }

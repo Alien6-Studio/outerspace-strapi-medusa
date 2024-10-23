@@ -14,7 +14,8 @@
     "@strapi/icons": "^1.6.3",
     "@strapi/strapi": "^4.25.11",
     "dotenv": "^16.4.5",
-    "prop-types": "^15.7.2"
+    "prop-types": "^15.7.2",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@strapi/typescript-utils": "^4.6.0",
@@ -51,6 +52,9 @@
   "scripts": {
     "develop": "tsc -p tsconfig.server.json -w",
     "build": "tsc -p tsconfig.server.json"
+  },
+  "exports": {
+    ".": "./dist/server/index.js"
   },
   "license": "CoopyrightCode Light",
   "repository": {
