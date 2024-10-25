@@ -14,10 +14,7 @@ function preloadCustomControllers(plugin: any) {
     const customControllers: { [key: string]: any } = {};
 
     try {
-
-        const pluginId = 'outerspace-strapi-plugin-medusa';
-        const pluginPath = path.dirname(require.resolve(`${pluginId}/package.json`));
-        const controllersIndexPath = path.join(pluginPath, 'server', 'controllers', 'index.ts');
+        const controllersIndexPath = path.join(__dirname, '../../controllers/index.js');
 
         // Import the controllers index file
         const controllersModule = require(controllersIndexPath);
