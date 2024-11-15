@@ -1,0 +1,10 @@
+{
+  "watch": [
+    "admin/src",
+    "server/"
+  ],
+  "ext": "ts,tsx,js,json",
+  "exec": "npm run build:server && npm run build:admin",
+  "delay": "500",
+  "legacyWatch": true 
+}

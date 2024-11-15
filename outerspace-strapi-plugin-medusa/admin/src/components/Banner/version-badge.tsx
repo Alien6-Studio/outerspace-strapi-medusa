@@ -1,3 +1,4 @@
+import React from 'react';
 import { Flex, Box, Badge } from '@strapi/design-system';
 
 const VersionBadges = () => {

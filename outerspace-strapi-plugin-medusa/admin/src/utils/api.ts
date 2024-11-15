@@ -44,3 +44,17 @@ export const synchronizeWithMedusa = async () => {
     throw error;
   }
 }
+
+/**
+ * Fetch and return pro version status
+ */
+export const isProVersion = async () => {
+  try {
+    const proPlugin = 'outerspace-strapi-medusa-pro';
+    const response = await axios(`/${proPlugin}/isProLicenced`, { method: "GET" });
+    return response.data || false;
+  } catch (error) {
+    console.error("Error while fetching pro version status.", error);
+    throw error;
+  }
+}

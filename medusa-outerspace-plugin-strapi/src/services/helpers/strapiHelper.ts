@@ -280,11 +280,7 @@ export class StrapiHelper {
             }
             if (e instanceof AxiosError) {
                 if (method.toLowerCase() == 'get' && e.response.status == 404) {
-                    this.loggerHelper.log(
-                        'error',
-                        `unable to find ${type} id: ${id ?? ''} query:${query ?? ''} message: ${e.message}`,
-                        params
-                    );
+					this.loggerHelper.log('warning', `entity not found in strapi :${e.message}`);
                     return {
                         id: undefined,
                         medusa_id: undefined,
@@ -367,6 +363,15 @@ export class StrapiHelper {
 			}
 			return result;
 		} catch (error) {
+			if (method.toLowerCase() == 'get' && error.response.status == 404) {
+				this.loggerHelper.log(
+					'warning',
+					`Strapi Warning : method: ${method}, id:${id}, type:${type},` +
+						` data:${JSON.stringify(data)}, :status:${error.response.status} query:${query}`
+				);
+				return error.response;
+			}
+			
 			this.loggerHelper.log(
 				'error',
 				`Strapi Error : method: ${method}, id:${id}, type:${type},` +

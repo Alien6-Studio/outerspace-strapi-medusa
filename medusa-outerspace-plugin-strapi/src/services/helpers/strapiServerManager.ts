@@ -14,7 +14,7 @@ import {
     AdminUserType, 
     Tokens } from '../../types/globals';
 
-import { AdminResult} from '../types/types';
+import { AdminResult, AdminAuthResponse } from '../types/types';
 
 export interface LoginTokenExpiredErrorParams extends Partial<StrapiSendParams> {
 	response?: { status: number };
@@ -238,43 +238,8 @@ export class StrapiServerManager {
 		}
 	}
 
-	/**
-	 * Register the super admin user in Strapi
-	 */
-	async registerSuperAdminUserInStrapi(): Promise<any> {
-		const auth: AdminUserType = {
-			...this.options.strapi_admin,
-		};
-		try {
-			const result = await this.executeStrapiAdminSend('post', 'register-admin', undefined, undefined, auth);
-			return result.data?.user;
-		} catch (e) {
-			this.loggerHelper.log(
-				'warn',
-				`unable to register super user,` + ` super user may already registered, ${e.message}`
-			);
-		}
-	}
 
-    /**
-     * Register Super Admin User in Strapi
-     */
-	async registerOrLoginAdmin(): Promise<{
-		data: {
-			user: any;
-			token: string;
-		};
-	}> {
-		try {
-			await this.registerSuperAdminUserInStrapi();
-		} catch (e) {
-			this.loggerHelper.log('info', 'super admin already registered', e);
-		}
-		return await this.executeLoginAsStrapiSuperAdmin();
-	}
-
-
-    	/** *
+    /** *
 	 * Send the command using elevated privileges
 	 */
 	async strapiAdminSendDatalayer(command: StrapiAdminSendParams): Promise<AdminResult> {
@@ -366,9 +331,7 @@ export class StrapiServerManager {
 		return await this.loginAsDefaultMedusaUser();
 	}
 
-	async executeLoginAsStrapiSuperAdmin(): Promise<{
-		data: { user: any; token: string };
-	}> {
+	async executeLoginAsStrapiSuperAdmin(): Promise<AdminAuthResponse> {
 		const auth = {
 			email: this.options.strapi_admin.email,
 			password: this.options.strapi_admin.password,
@@ -394,9 +357,6 @@ export class StrapiServerManager {
 			});
 
 			this.loggerHelper.log('info', 'Logged In   Admin ' + auth.email + ' with strapi');
-			this.loggerHelper.log('info', 'Admin profile', response.data.data.user);
-			//this.loggerHelper.log('info', 'Admin token', response.data.data.token);
-
 			this.strapiSuperAdminAuthToken = response.data.data.token;
 			this.userAdminProfile = response.data.data.user;
 			return {
@@ -417,7 +377,7 @@ export class StrapiServerManager {
 	 * Initialize the Strapi Server
 	 */
 	async intializeServer(): Promise<any> {
-		await this.registerOrLoginAdmin();
+		await this.executeLoginAsStrapiSuperAdmin();
 		if (this.strapiSuperAdminAuthToken) {
 			const user = (await this.registerOrLoginDefaultMedusaUser()).user;
 			if (!this.options.sync_on_init) {
@@ -557,13 +517,12 @@ export class StrapiServerManager {
 			while (timeOut-- > 0) {
 				try {
 					response = await axios.head(config.url);
+					if (response && response?.status) {
+						break;
+					}
 				} catch (e) {
-					this.loggerHelper.log('error', `health check error ${e.message}`);
+					continue;
 				}
-				if (response && response?.status) {
-					break;
-				}
-				this.loggerHelper.log('error', `response from the server: ${response?.status ?? 'no-response'}`);
 				await sleep(3000); // 3 seconds
 			}
 

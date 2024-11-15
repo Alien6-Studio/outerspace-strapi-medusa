@@ -3,8 +3,8 @@ import { BaseHeaderLayout, ContentLayout } from '@strapi/design-system/Layout';
 import { Box, Button, Flex, IconButton, TextInput, Typography } from '@strapi/design-system';
 import { Eye, EyeStriked } from '@strapi/icons';
 
-import Banner from './banner';
 import { getConfig, updateConfig, synchronizeWithMedusa } from "../../utils/api";
+import TabWrapper from '../../components/TabWrapper';
 
 interface Config {
   medusaSecret: string;
@@ -88,6 +88,132 @@ const HomePage: React.FC = () => {
     }
   };
 
+  const ConfigurationContent = () => (
+    <>
+      <Box padding={4}>
+        <Box margin={4} padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
+          <Typography variant="beta">Medusa Server Configuration</Typography>
+          <Box padding={2}>
+            <TextInput
+              label="Medusa Backend URL"
+              name="medusaBackendUrl"
+              onChange={(e: any) => handleInputChange(e, 'medusaBackendUrl')}
+              value={config?.medusaBackendUrl}
+            />
+          </Box>
+          <Box padding={2}>
+            <TextInput
+              label="Medusa Admin URL"
+              name="medusaBackendAdmin"
+              onChange={(e: any) => handleInputChange(e, 'medusaBackendAdmin')}
+              value={config?.medusaBackendAdmin}
+            />
+          </Box>
+          <Box padding={2} display="flex" alignItems="center">
+              <TextInput
+                type={passwordVisibility.medusaSecret ? "text" : "password"}
+                label="Medusa Secret"
+                name="medusaSecret"
+                onChange={(e: any) => handleInputChange(e, 'medusaSecret')}
+                value={config?.medusaSecret}
+                style={{ flex: 1 }}
+              />
+            <IconButton
+              label={passwordVisibility.medusaSecret ? "Hide secret" : "Show secret"}
+              icon={passwordVisibility.medusaSecret ? <EyeStriked /> : <Eye />}
+              onClick={() => togglePasswordVisibility('medusaSecret')}
+              size="L"
+              style={{ marginLeft: ".2em", marginTop: "50%", display: "flex", alignItems: "center" }} 
+            />
+          </Box>
+        </Box>
+      </Box>
+
+      <Box padding={4}>
+        <Box padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
+          <Typography variant="beta">Sync User Configuration</Typography>
+          <Box padding={2}>
+            <TextInput
+              label="Medusa Username"
+              name="medusaUser"
+              onChange={(e: any) => handleInputChange(e, 'medusaUser')}
+              value={config?.medusaUser}
+            />
+          </Box>
+          <Box padding={2} display="flex" alignItems="center">
+              <TextInput
+                type={passwordVisibility.medusaPassword ? "text" : "password"}
+                label="Medusa Password"
+                name="medusaPassword"
+                onChange={(e: any) => handleInputChange(e, 'medusaPassword')}
+                value={config?.medusaPassword}
+                style={{ flex: 1 }}
+              />
+            <IconButton
+              label={passwordVisibility.medusaPassword ? "Hide password" : "Show password"}
+              icon={passwordVisibility.medusaPassword ? <EyeStriked /> : <Eye />}
+              onClick={() => togglePasswordVisibility('medusaPassword')}
+              size="L"
+              style={{ marginLeft: ".2em", marginTop: "50%", display: "flex", alignItems: "center" }} 
+            />
+          </Box>
+        </Box>
+      </Box>
+
+      <Box padding={4}>
+        <Box padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
+          <Typography variant="beta">Medusa Superuser Configuration</Typography>
+          <Box padding={2}>
+            <TextInput
+              label="Superuser Email"
+              name="superuserEmail"
+              onChange={(e: any) => handleInputChange(e, 'superuserEmail')}
+              value={config?.superuserEmail}
+            />
+          </Box>
+          <Box padding={2}>
+            <TextInput
+              label="Superuser Username"
+              name="superuserUsername"
+              onChange={(e: any) => handleInputChange(e, 'superuserUsername')}
+              value={config?.superuserUsername}
+            />
+          </Box>
+          <Box padding={2} display="flex" alignItems="center">
+              <TextInput
+                type={passwordVisibility.superuserPassword ? "text" : "password"}
+                label="Superuser Password"
+                name="superuserPassword"
+                onChange={(e: any) => handleInputChange(e, 'superuserPassword')}
+                value={config?.superuserPassword}
+                style={{ flex: 1 }}
+              />
+            <IconButton
+              label={passwordVisibility.superuserPassword ? "Hide password" : "Show password"}
+              icon={passwordVisibility.superuserPassword ? <EyeStriked /> : <Eye />}
+              onClick={() => togglePasswordVisibility('superuserPassword')}
+              size="L"
+              style={{ marginLeft: ".2em", marginTop: "50%", display: "flex", alignItems: "center" }} 
+            />
+          </Box>
+        </Box>
+
+        <Flex gap={{ initial: 1, medium: 4, large: 8 }} direction={{ initial: 'row', medium: 'row' }} alignItems={{ initial: 'center', medium: 'flex-start' }}>
+          <Box padding={2}>
+            <Button onClick={handleUpdateConfig} disabled={isLoading}>
+              {isLoading ? "Updating..." : "Update Configuration"}
+            </Button>
+          </Box>
+          <Box padding={2}>
+            <Button onClick={handleTestSynchronization} disabled={isLoading} background="secondary500" borderColor="secondary500"> 
+              {isLoading ? "Updating..." : "Test Synchronization"}
+            </Button>
+          </Box>
+        </Flex>
+      </Box>
+    </>
+  );
+
   useEffect(() => {
     fetchConfig();
   }, []);
@@ -95,130 +221,13 @@ const HomePage: React.FC = () => {
   return (
     <div>
       <BaseHeaderLayout title="Medusa Integration" subtitle="Plugin Configuration" as="h2" />
-      <ContentLayout>
-        <Box padding={4}>
-          <Banner visible />
-          <Box margin={4} padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
-            <Typography variant="beta">Medusa Server Configuration</Typography>
-            <Box padding={2}>
-              <TextInput
-                label="Medusa Backend URL"
-                name="medusaBackendUrl"
-                onChange={(e: any) => handleInputChange(e, 'medusaBackendUrl')}
-                value={config?.medusaBackendUrl}
-              />
-            </Box>
-            <Box padding={2}>
-              <TextInput
-                label="Medusa Admin URL"
-                name="medusaBackendAdmin"
-                onChange={(e: any) => handleInputChange(e, 'medusaBackendAdmin')}
-                value={config?.medusaBackendAdmin}
-              />
-            </Box>
-            <Box padding={2} display="flex" alignItems="center">
-                <TextInput
-                  type={passwordVisibility.medusaSecret ? "text" : "password"}
-                  label="Medusa Secret"
-                  name="medusaSecret"
-                  onChange={(e: any) => handleInputChange(e, 'medusaSecret')}
-                  value={config?.medusaSecret}
-                  style={{ flex: 1 }}
-                />
-              <IconButton
-                label={passwordVisibility.medusaSecret ? "Hide secret" : "Show secret"}
-                icon={passwordVisibility.medusaSecret ? <EyeStriked /> : <Eye />}
-                onClick={() => togglePasswordVisibility('medusaSecret')}
-                size="L"
-                style={{ marginLeft: ".2em", marginTop: "50%", display: "flex", alignItems: "center" }} 
-              />
-            </Box>
+        <ContentLayout>
+          <Box padding={4}>
+            <TabWrapper>
+              <ConfigurationContent />
+            </TabWrapper>
           </Box>
-        </Box>
-
-        <Box padding={4}>
-          <Box padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
-            <Typography variant="beta">Sync User Configuration</Typography>
-            <Box padding={2}>
-              <TextInput
-                label="Medusa Username"
-                name="medusaUser"
-                onChange={(e: any) => handleInputChange(e, 'medusaUser')}
-                value={config?.medusaUser}
-              />
-            </Box>
-            <Box padding={2} display="flex" alignItems="center">
-                <TextInput
-                  type={passwordVisibility.medusaPassword ? "text" : "password"}
-                  label="Medusa Password"
-                  name="medusaPassword"
-                  onChange={(e: any) => handleInputChange(e, 'medusaPassword')}
-                  value={config?.medusaPassword}
-                  style={{ flex: 1 }}
-                />
-              <IconButton
-                label={passwordVisibility.medusaPassword ? "Hide password" : "Show password"}
-                icon={passwordVisibility.medusaPassword ? <EyeStriked /> : <Eye />}
-                onClick={() => togglePasswordVisibility('medusaPassword')}
-                size="L"
-                style={{ marginLeft: ".2em", marginTop: "50%", display: "flex", alignItems: "center" }} 
-              />
-            </Box>
-          </Box>
-        </Box>
-
-        <Box padding={4}>
-          <Box padding={4} borderColor="neutral500" borderStyle="plain" borderWidth="2px" background="neutral0">
-            <Typography variant="beta">Medusa Superuser Configuration</Typography>
-            <Box padding={2}>
-              <TextInput
-                label="Superuser Email"
-                name="superuserEmail"
-                onChange={(e: any) => handleInputChange(e, 'superuserEmail')}
-                value={config?.superuserEmail}
-              />
-            </Box>
-            <Box padding={2}>
-              <TextInput
-                label="Superuser Username"
-                name="superuserUsername"
-                onChange={(e: any) => handleInputChange(e, 'superuserUsername')}
-                value={config?.superuserUsername}
-              />
-            </Box>
-            <Box padding={2} display="flex" alignItems="center">
-                <TextInput
-                  type={passwordVisibility.superuserPassword ? "text" : "password"}
-                  label="Superuser Password"
-                  name="superuserPassword"
-                  onChange={(e: any) => handleInputChange(e, 'superuserPassword')}
-                  value={config?.superuserPassword}
-                  style={{ flex: 1 }}
-                />
-              <IconButton
-                label={passwordVisibility.superuserPassword ? "Hide password" : "Show password"}
-                icon={passwordVisibility.superuserPassword ? <EyeStriked /> : <Eye />}
-                onClick={() => togglePasswordVisibility('superuserPassword')}
-                size="L"
-                style={{ marginLeft: ".2em", marginTop: "50%", display: "flex", alignItems: "center" }} 
-              />
-            </Box>
-          </Box>
-
-          <Flex gap={{ initial: 1, medium: 4, large: 8 }} direction={{ initial: 'row', medium: 'row' }} alignItems={{ initial: 'center', medium: 'flex-start' }}>
-            <Box padding={2}>
-              <Button onClick={handleUpdateConfig} disabled={isLoading}>
-                {isLoading ? "Updating..." : "Update Configuration"}
-              </Button>
-            </Box>
-            <Box padding={2}>
-              <Button onClick={handleTestSynchronization} disabled={isLoading} background="secondary500" borderColor="secondary500"> 
-                {isLoading ? "Updating..." : "Test Synchronization"}
-              </Button>
-            </Box>
-          </Flex>
-        </Box>
-      </ContentLayout>
+        </ContentLayout>
     </div>
   );
 };
